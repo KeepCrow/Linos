@@ -20,16 +20,17 @@ asm :
 
 build :
 	$(MAKE) img
-	mv linos.img $(BUILD)/linos.bin
+	copy linos.img ..\build\linos.bin
 
 run :
 	$(MAKE) build
 	$(MAKE) -C $(TOOL)/qemu
 
 clean :
-	-rm ipl.bin
-	-rm ipl.lst
+	-del ipl.bin
+	-del ipl.lst
+	-del linos.img
 
 src_only :
 	$(MAKE) clean
-	-rm $(BUILD)/linos.bin
+	-del ..\build\linos.bin
