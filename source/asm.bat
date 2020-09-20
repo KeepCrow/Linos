@@ -1,0 +1,1 @@
+..\tolset\z_tools\nask.exe linos.nas linos.img
