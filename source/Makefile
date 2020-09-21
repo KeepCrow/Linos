@@ -1,17 +1,24 @@
-TOOL = ../tolset/z_tools
-MAKE = $(TOOL)/make
-
-win_BUILD = ..\build
+TOOL 	= ../tolset/z_tools
+MAKE 	= $(TOOL)/make.exe
+NASK 	= $(TOOL)/nask.exe
+EDIMG 	= $(TOOL)/edimg.exe
+IMGTOL	= $(tool)/imgtol.com
+COPY	= copy
+DEL 	= del
 
 default :
 	$(MAKE) img
 
 ipl.bin : ipl.nas
-	$(TOOL)/nask.exe ipl.nas $(win_BUILD)\ipl.bin $(win_BUILD)\ipl.lst
+	$(NASK) ipl.nas ipl.bin ipl.lst
+
+linos.sys : linos.nas
+	$(NASK) linos.nas linos.lst
 
 linos.img : ipl.bin
-	$(TOOL)/edimg.exe imgin:$(TOOL)/fdimg0at.tek \
-		wbinimg src:../build/ipl.bin len:512 from:0 to:0 imgout:../build/linos.img
+	$(EDIMG) imgin:$(TOOL)/fdimg0at.tek \
+		wbinimg src:ipl.bin len:512 from:0 to:0 \
+		imgout:linos.img
 
 img :
 	$(MAKE) -r linos.img
@@ -20,18 +27,21 @@ asm :
 	$(MAKE) -r ipl.bin
 
 build :
+	$(MAKE) init
 	$(MAKE) img
-	copy $(win_BUILD)\linos.img $(win_BUILD)\linos.bin
+	COPY linos.img linos.bin
 
 run :
 	$(MAKE) build
 	$(MAKE) -C $(TOOL)/qemu
 
 clean :
-	-del $(win_BUILD)\ipl.bin
-	-del $(win_BUILD)\ipl.lst
-	-del $(win_BUILD)\linos.img
+	-DEL ipl.bin
+	-DEL ipl.lst
+	-DEL linos.img
+	-DEl linos.lst
+	-DEL linos.sys
 
 src_only :
 	$(MAKE) clean
-	-del $(win_BUILD)\linos.bin
+	-DEL linos.bin
