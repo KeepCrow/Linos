@@ -33,17 +33,27 @@ entry:
 
 ; 读取磁盘中的数据
     MOV AX, 0x820
-    MOV ES, AX      ; ES:BX表示目标内存地址
-    MOV BX, 0       ; 地址为：0x8200
+    MOV ES, AX      ; ES:BX表示目标缓存地址(BX在下面赋值)
     MOV CH, 0       ; 柱面0
     MOV DH, 0       ; 磁头0
     MOV CL, 2       ; 扇区2
 
+    MOV SI, 0       ; 记录失败次数
+
+retry:
     MOV AH, 0x02    ; 0x02表示读盘
     MOV AL, 1       ; 同时处理的扇区数为1
+    MOV BX, 0       ; 缓存地址为：0x8200
     MOV DL, 0x00    ; 驱动器号0
-    INT 0x12        ; 12号中断
-    JC error
+    INT 0x13        ; 13号中断
+    JNC fin
+    ADD SI, 1
+    CMP SI, 5
+    JAE error
+    MOV AH, 0x00
+    MOV DL, 0x00
+    INT 0x13
+    JMP retry
 
 fin:
     HLT             ; 让CPU无限循环，等待指令
