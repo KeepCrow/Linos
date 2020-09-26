@@ -3,8 +3,8 @@ MAKE 	= $(TOOL)/make.exe
 NASK 	= $(TOOL)/nask.exe
 EDIMG 	= $(TOOL)/edimg.exe
 IMGTOL	= $(TOOL)/imgtol.com
-COPY	= copy
-DEL 	= del
+COPY	= cp
+DEL 	= rm
 
 default :
 	$(MAKE) img
@@ -20,6 +20,8 @@ linos.img : ipl.bin linos.sys
 		wbinimg src:ipl.bin len:512 from:0 to:0 \
 		copy from:linos.sys to:@: \
 		imgout:linos.img
+
+.PHONY: img asm build run clean src_only
 
 img :
 	$(MAKE) -r linos.img
