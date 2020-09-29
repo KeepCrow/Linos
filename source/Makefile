@@ -3,31 +3,30 @@ MAKE 	= $(TOOL)/make.exe
 NASK 	= $(TOOL)/nask.exe
 EDIMG 	= $(TOOL)/edimg.exe
 IMGTOL	= $(TOOL)/imgtol.com
-COPY	= cp
-DEL 	= rm
+
+COPY 	= copy
+DEL		= del
 
 default :
 	$(MAKE) img
 
-ipl.bin : ipl.nas
-	$(NASK) ipl.nas ipl.bin ipl.lst
+ipl10.bin : ipl10.nas
+	$(NASK) ipl10.nas ipl10.bin ipl10.lst
 
 linos.sys : linos.nas
 	$(NASK) linos.nas linos.sys linos.lst
 
-linos.img : ipl.bin linos.sys
+linos.img : ipl10.bin linos.sys
 	$(EDIMG) imgin:$(TOOL)/fdimg0at.tek \
-		wbinimg src:ipl.bin len:512 from:0 to:0 \
+		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:linos.sys to:@: \
 		imgout:linos.img
-
-.PHONY: img asm build run clean src_only
 
 img :
 	$(MAKE) -r linos.img
 
 asm :
-	$(MAKE) -r ipl.bin
+	$(MAKE) -r ipl10.bin
 
 build :
 	$(MAKE) img
@@ -38,10 +37,10 @@ run :
 	$(MAKE) -C $(TOOL)/qemu
 
 clean :
-	-$(DEL) ipl.bin
-	-$(DEL) ipl.lst
+	-$(DEL) ipl10.bin
+	-$(DEL) ipl10.lst
+	-$(DEL) linos.lst
 	-$(DEL) linos.img
-	-$(DEl) linos.lst
 	-$(DEL) linos.sys
 
 src_only :

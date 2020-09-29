@@ -1,4 +1,4 @@
-; lin-os
+; linos-ipl
 ; TAB = 4
 
     CYLS    EQU 10    
@@ -48,7 +48,7 @@ retry:
     MOV     BX, 0       ; 缓存地址为: 0x8200
     MOV     DL, 0x00    ; 驱动器号0
     INT     0x13        ; 13号中断
-    JNC     fin
+    JNC     next
     ADD     SI, 1
     CMP     SI, 5
     JAE     error
@@ -72,9 +72,9 @@ next:
     CMP     CH, CYLS
     JB      readloop    ; 如果 CH < CYLS, 则继续读盘
 
-fin:
-    HLT                 ; 让CPU无限循环, 等待指令
-    JMP     fin         ; 无限循环
+; 存储读取柱面数量, 然后跳去系统执行
+    MOV     [0xff0], CH
+    JMP     0xc200
 
 error:
     MOV     SI, msg
