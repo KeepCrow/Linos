@@ -1,8 +1,15 @@
 TOOL 	= ../tolset/z_tools
-MAKE 	= $(TOOL)/make.exe
-NASK 	= $(TOOL)/nask.exe
-EDIMG 	= $(TOOL)/edimg.exe
-IMGTOL	= $(TOOL)/imgtol.com
+INC 	= $(TOOL)/haribote
+
+MAKE 		= $(TOOL)/make.exe -r
+NASK 		= $(TOOL)/nask.exe
+CC1 		= $(TOOL)/cc1.exe -I$(INC) -Os -Wall -quiet
+GAS2NASK	= $(TOOL)/gas2nask.exe -a
+OBJ2BIM		= $(TOOL)/obj2bim.exe
+BIM2HRB		= $(TOOL)/bim2hrb.exe
+RULEFILE	= $(TOOL)/haribote/haribote.rul
+EDIMG 		= $(TOOL)/edimg.exe
+IMGTOL		= $(TOOL)/imgtol.com
 
 COPY 	= copy
 DEL		= del
@@ -13,9 +20,29 @@ default :
 ipl10.bin : ipl10.nas
 	$(NASK) ipl10.nas ipl10.bin ipl10.lst
 
-linos.sys : linos.nas
-	$(NASK) linos.nas linos.sys linos.lst
+asmhead.bin : asmhead.nas
+	$(NASK) asmhead.nas asmhead.bin asmhead.lst
 
+bootpack.gas : bootpack.c
+	$(CC1) -o bootpack.gas bootpack.c
+
+bootpack.nas : bootpack.gas
+	$(GAS2NASK) bootpack.gas bootpack.nas
+
+bootpack.obj : bootpack.nas
+	$(NASK) bootpack.nas bootpack.obj bootpack.lst
+
+bootpack.bim : bootpack.obj
+	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
+		bootpack.obj
+
+bootpack.hrb : bootpack.bim
+	$(BIM2HRB) bootpack.bim bootpack.hrb 0
+
+linos.sys : asmhead.bin bootpack.hrb
+	copy /B asmhead.bin+bootpack.hrb linos.sys
+
+# 这一步的功能是拼装一个img出来，但具体怎么实现的不清楚
 linos.img : ipl10.bin linos.sys
 	$(EDIMG) imgin:$(TOOL)/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
@@ -23,10 +50,7 @@ linos.img : ipl10.bin linos.sys
 		imgout:linos.img
 
 img :
-	$(MAKE) -r linos.img
-
-asm :
-	$(MAKE) -r ipl10.bin
+	$(MAKE) linos.img
 
 build :
 	$(MAKE) img
@@ -37,12 +61,17 @@ run :
 	$(MAKE) -C $(TOOL)/qemu
 
 clean :
-	-$(DEL) ipl10.bin
-	-$(DEL) ipl10.lst
-	-$(DEL) linos.lst
-	-$(DEL) linos.img
+	-$(DEL) *.bin
+	-$(DEL) *.lst
+	-$(DEL) *.gas
+	-$(DEL) *.obj
+	-$(DEL) bootpack.nas
+	-$(DEL) bootpack.map
+	-$(DEL) bootpack.bim
+	-$(DEL) bootpack.hrb
 	-$(DEL) linos.sys
 
 src_only :
 	$(MAKE) clean
-	-$(DEL) linos.bin
+	-$(DEL) linos.img
+

@@ -72,7 +72,7 @@ next:
     CMP     CH, CYLS
     JB      readloop    ; 如果 CH < CYLS, 则继续读盘
 
-; 存储读取柱面数量, 然后跳去系统执行
+; 存储读取柱面数量到内存地址为0xff0处, 然后跳去系统执行
     MOV     [0xff0], CH
     JMP     0xc200
 
