@@ -51,9 +51,14 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# build
+.build/
 *.bin
 *.lst
-*.img
+*.gas
+*.obj
+*.nas
+*.map
+*.bim
+*.hrb
 *.sys
 
