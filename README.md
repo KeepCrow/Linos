@@ -6,7 +6,7 @@
 
 ## 运行方式
 
-需要先安装`make`软件，进入`source`文件夹下，终端输入
+进入`source`文件夹下，终端输入
 
 ```
 make run
@@ -16,5 +16,5 @@ make run
 
 ## 其他指令
 
-- make clean：删除生成的中间文件
+- make clean：删除生成的中间文件，保留img文件
 - make src_only：删除所有生成的文件
