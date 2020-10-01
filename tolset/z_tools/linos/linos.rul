@@ -8,8 +8,8 @@ file:
 		.obj�t�@�C���A.lib�t�@�C�����L�� */
 	/* �Ȃ��A���̃Z�N�V�����̓t���p�X�ŏ����Ă��悢�B */
 	/* ��F  c:/osask/gg00libc.lib;  */
-	../tolset/z_tools/haribote/harilibc.lib;
-	../tolset/z_tools/haribote/golibc.lib;
+	../tolset/z_tools/linos/linlibc.lib;
+	../tolset/z_tools/linos/golibc.lib;
 
 label:
 	/* �K�������N���Ȃ���΂����Ȃ����x�����w�� */

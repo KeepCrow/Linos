@@ -1,5 +1,5 @@
 TOOL 	= ../tolset/z_tools
-INC 	= $(TOOL)/haribote
+INC 	= $(TOOL)/linos
 
 MAKE 		= $(TOOL)/make.exe -r
 NASK 		= $(TOOL)/nask.exe
@@ -7,7 +7,7 @@ CC1 		= $(TOOL)/cc1.exe -I$(INC) -Os -Wall -quiet
 GAS2NASK	= $(TOOL)/gas2nask.exe -a
 OBJ2BIM		= $(TOOL)/obj2bim.exe
 BIM2HRB		= $(TOOL)/bim2hrb.exe
-RULEFILE	= $(TOOL)/haribote/haribote.rul
+RULEFILE	= $(TOOL)/linos/linos.rul
 EDIMG 		= $(TOOL)/edimg.exe
 IMGTOL		= $(TOOL)/imgtol.com
 
