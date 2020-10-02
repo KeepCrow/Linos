@@ -1,19 +1,19 @@
-#define COL8_000000		0
-#define COL8_FF0000		1
-#define COL8_00FF00		2
-#define COL8_FFFF00		3
-#define COL8_0000FF		4
-#define COL8_FF00FF		5
-#define COL8_00FFFF		6
-#define COL8_FFFFFF		7
-#define COL8_C6C6C6		8
-#define COL8_840000		9
-#define COL8_008400		10
-#define COL8_848400		11
-#define COL8_000084		12
-#define COL8_840084		13
-#define COL8_008484		14
-#define COL8_848484		15
+#define BLACK           0   /* 000000 */
+#define BRIGHT_RED      1   /* FF0000 */
+#define BRIGHT_GREEN    2   /* 00FF00 */
+#define BRIGHT_YELLOW   3   /* FFFF00 */
+#define BRIGHT_BLUE     4   /* 0000FF */
+#define BRIGHT_PURPLE   5   /* FF00FF */
+#define LIGHT_BLUE      6   /* 00FFFF */
+#define WHITE           7   /* FFFFFF */
+#define BRIGHT_GRAY     8   /* C6C6C6 */
+#define DARK_RED        9   /* 840000 */
+#define DARK_GREEN      10  /* 008400 */
+#define DARK_YELLOW     11  /* 848400 */
+#define DARK_BLUE       12  /* 000084 */
+#define DARK_PURPLE     13  /* 840084 */
+#define LIGHT_DARK_BLUE 14  /* 008484 */
+#define DARK_GRAY       15  /* 848484 */
 
 void io_hlt(void);
 void io_cli(void);
@@ -32,13 +32,30 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c,
 /* 暂时无法修改为LinMain()，可惜可惜 */
 void HariMain(void)
 {
-    char *p;
-    init_palette(); /* 设置调色板 */
+    char *vram;
+    int xsize, ysize;
 
-    p = (char *)0xa0000;    /* 显存初始地址 */
-    boxfill8(p, 320, COL8_FF0000, 20, 20, 100, 100);
-    boxfill8(p, 320, COL8_00FF00, 70, 50, 100, 100);
-    boxfill8(p, 320, COL8_0000FF, 120, 80, 100, 100);
+    init_palette(); /* 设置调色板 */
+    vram = (char *)0xa0000;    /* 显存初始地址 */
+    xsize = 320;
+    ysize = 200;
+    
+    boxfill8(vram, xsize, LIGHT_DARK_BLUE, 0, 0, xsize, ysize - 28);
+    boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 28, xsize, 1);
+    boxfill8(vram, xsize, WHITE, 0, ysize - 27, xsize, 1);
+    boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 26, xsize, 26);
+
+    boxfill8(vram, xsize, WHITE, 3, ysize - 24, 57, 1);
+    boxfill8(vram, xsize, WHITE, 2, ysize - 24, 1, 21);
+    boxfill8(vram, xsize, DARK_GRAY, 3, ysize - 4, 57, 1);
+    boxfill8(vram, xsize, DARK_GRAY, 59, ysize - 23, 1, 19);
+    boxfill8(vram, xsize, BLACK, 2, ysize - 3, 58, 1);
+    boxfill8(vram, xsize, BLACK, 60, ysize - 24, 1, 22);
+
+    boxfill8(vram, xsize, DARK_GRAY, xsize - 47, ysize - 24, 44, 1);
+    boxfill8(vram, xsize, DARK_GRAY, xsize - 47, ysize - 23, 1, 20);
+    boxfill8(vram, xsize, WHITE, xsize - 47, ysize - 3, 44, 1);
+    boxfill8(vram, xsize, WHITE, xsize - 3, ysize - 24, 1, 22);
 
     for (;;)
     {
