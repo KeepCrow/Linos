@@ -29,33 +29,25 @@ void init_palette(void);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, 
                 int x0, int y0, int xlen, int ylen);
 
+/* 图形绘制函数：初始化开始界面 */
+void init_screen(unsigned char *vram, int xsize, int ysize); 
+
+
+struct BOOTINFO
+{
+    char cyls, leds, vmode, reserve;
+    short scrnx, scrny;
+    char *vram;
+};
+
 /* 暂时无法修改为LinMain()，可惜可惜 */
 void HariMain(void)
 {
-    char *vram;
-    int xsize, ysize;
+    struct BOOTINFO *binfo;
 
-    init_palette(); /* 设置调色板 */
-    vram = (char *)0xa0000;    /* 显存初始地址 */
-    xsize = 320;
-    ysize = 200;
-    
-    boxfill8(vram, xsize, LIGHT_DARK_BLUE, 0, 0, xsize, ysize - 28);
-    boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 28, xsize, 1);
-    boxfill8(vram, xsize, WHITE, 0, ysize - 27, xsize, 1);
-    boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 26, xsize, 26);
-
-    boxfill8(vram, xsize, WHITE, 3, ysize - 24, 57, 1);
-    boxfill8(vram, xsize, WHITE, 2, ysize - 24, 1, 21);
-    boxfill8(vram, xsize, DARK_GRAY, 3, ysize - 4, 57, 1);
-    boxfill8(vram, xsize, DARK_GRAY, 59, ysize - 23, 1, 19);
-    boxfill8(vram, xsize, BLACK, 2, ysize - 3, 58, 1);
-    boxfill8(vram, xsize, BLACK, 60, ysize - 24, 1, 22);
-
-    boxfill8(vram, xsize, DARK_GRAY, xsize - 47, ysize - 24, 44, 1);
-    boxfill8(vram, xsize, DARK_GRAY, xsize - 47, ysize - 23, 1, 20);
-    boxfill8(vram, xsize, WHITE, xsize - 47, ysize - 3, 44, 1);
-    boxfill8(vram, xsize, WHITE, xsize - 3, ysize - 24, 1, 22);
+    binfo = (struct BOOTINFO *) 0x0ff0;
+    init_palette(); /* 设置调色板 */   
+    init_screen(binfo->vram, binfo->scrnx, binfo->scrny); 
 
     for (;;)
     {
@@ -119,4 +111,24 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c,
         }
     }
     return;
+}
+
+void init_screen(unsigned char *vram, int xsize, int ysize)
+{
+    boxfill8(vram, xsize, LIGHT_DARK_BLUE, 0, 0, xsize, ysize - 28);
+    boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 28, xsize, 1);
+    boxfill8(vram, xsize, WHITE, 0, ysize - 27, xsize, 1);
+    boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 26, xsize, 26);
+
+    boxfill8(vram, xsize, WHITE, 3, ysize - 24, 57, 1);
+    boxfill8(vram, xsize, WHITE, 2, ysize - 24, 1, 21);
+    boxfill8(vram, xsize, DARK_GRAY, 3, ysize - 4, 57, 1);
+    boxfill8(vram, xsize, DARK_GRAY, 59, ysize - 23, 1, 19);
+    boxfill8(vram, xsize, BLACK, 2, ysize - 3, 58, 1);
+    boxfill8(vram, xsize, BLACK, 60, ysize - 24, 1, 22);
+
+    boxfill8(vram, xsize, DARK_GRAY, xsize - 47, ysize - 24, 44, 1);
+    boxfill8(vram, xsize, DARK_GRAY, xsize - 47, ysize - 23, 1, 20);
+    boxfill8(vram, xsize, WHITE, xsize - 47, ysize - 3, 44, 1);
+    boxfill8(vram, xsize, WHITE, xsize - 3, ysize - 24, 1, 22);
 }
