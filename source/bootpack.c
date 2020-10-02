@@ -25,13 +25,11 @@ void io_store_eflags(int eflags);
 void set_palette(int start, int end, unsigned char *rgb);
 void init_palette(void);
 
-/* 图形绘制函数：绘制一个长方形 */
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, 
+void boxfill8(char *vram, int xsize, unsigned char c, 
                 int x0, int y0, int xlen, int ylen);
+void init_screen(char *vram, int xsize, int ysize); 
 
-/* 图形绘制函数：初始化开始界面 */
-void init_screen(unsigned char *vram, int xsize, int ysize); 
-
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 
 struct BOOTINFO
 {
@@ -48,6 +46,12 @@ void HariMain(void)
     binfo = (struct BOOTINFO *) 0x0ff0;
     init_palette(); /* 设置调色板 */   
     init_screen(binfo->vram, binfo->scrnx, binfo->scrny); 
+
+    static char font_A[16] = {
+        0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
+        0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
+    };
+    putfont8(binfo->vram, binfo->scrnx, 8, 8, WHITE, font_A);
 
     for (;;)
     {
@@ -99,7 +103,7 @@ void set_palette(int start, int end, unsigned char *rgb)
     return;
 }
 
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, 
+void boxfill8(char *vram, int xsize, unsigned char c, 
                 int x0, int y0, int xlen, int ylen)
 {
     int x, y;
@@ -113,7 +117,7 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c,
     return;
 }
 
-void init_screen(unsigned char *vram, int xsize, int ysize)
+void init_screen(char *vram, int xsize, int ysize)
 {
     boxfill8(vram, xsize, LIGHT_DARK_BLUE, 0, 0, xsize, ysize - 28);
     boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 28, xsize, 1);
@@ -131,4 +135,30 @@ void init_screen(unsigned char *vram, int xsize, int ysize)
     boxfill8(vram, xsize, DARK_GRAY, xsize - 47, ysize - 23, 1, 20);
     boxfill8(vram, xsize, WHITE, xsize - 47, ysize - 3, 44, 1);
     boxfill8(vram, xsize, WHITE, xsize - 3, ysize - 24, 1, 22);
+
+    return;
+}
+
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
+{
+    int i;
+    char d;     /* data */
+    char *p;
+
+    for (i = 0; i < 16; i++)
+    {
+        p = vram + (y + i) * xsize + x;
+        d = font[i];
+
+        if ((d & 0x80) != 0) p[0] = c;
+        if ((d & 0x40) != 0) p[1] = c;
+        if ((d & 0x20) != 0) p[2] = c;
+        if ((d & 0x10) != 0) p[3] = c;
+        if ((d & 0x08) != 0) p[4] = c;
+        if ((d & 0x04) != 0) p[5] = c;
+        if ((d & 0x02) != 0) p[6] = c;
+        if ((d & 0x01) != 0) p[7] = c;
+    }
+
+    return;
 }
