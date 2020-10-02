@@ -61,4 +61,5 @@ dkms.conf
 *.bim
 *.hrb
 *.sys
+*.img
 
