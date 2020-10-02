@@ -41,17 +41,18 @@ struct BOOTINFO
 /* 暂时无法修改为LinMain()，可惜可惜 */
 void HariMain(void)
 {
-    struct BOOTINFO *binfo;
+    struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
+    extern char hankaku[4096];
 
-    binfo = (struct BOOTINFO *) 0x0ff0;
     init_palette(); /* 设置调色板 */   
     init_screen(binfo->vram, binfo->scrnx, binfo->scrny); 
-
-    static char font_A[16] = {
-        0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
-        0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
-    };
-    putfont8(binfo->vram, binfo->scrnx, 8, 8, WHITE, font_A);
+    putfont8(binfo->vram, binfo->scrnx, 8, 8, WHITE, hankaku + 'A' * 16);
+    putfont8(binfo->vram, binfo->scrnx, 16, 8, WHITE, hankaku + 'B' * 16);
+    putfont8(binfo->vram, binfo->scrnx, 24, 8, WHITE, hankaku + 'C' * 16);
+    putfont8(binfo->vram, binfo->scrnx, 40, 8, WHITE, hankaku + '1' * 16);
+    putfont8(binfo->vram, binfo->scrnx, 48, 8, WHITE, hankaku + '2' * 16);
+    putfont8(binfo->vram, binfo->scrnx, 56, 8, WHITE, hankaku + '3' * 16);
+    
 
     for (;;)
     {

@@ -6,6 +6,8 @@ NASK 		= $(TOOL)/nask.exe
 CC1 		= $(TOOL)/cc1.exe -I$(INC) -Os -Wall -quiet
 GAS2NASK	= $(TOOL)/gas2nask.exe -a
 OBJ2BIM		= $(TOOL)/obj2bim.exe
+MAKEFONT	= $(TOOL)/makefont.exe
+BIN2OBJ		= $(TOOL)/bin2obj.exe
 BIM2HRB		= $(TOOL)/bim2hrb.exe
 RULEFILE	= $(TOOL)/linos/linos.rul
 EDIMG 		= $(TOOL)/edimg.exe
@@ -15,7 +17,7 @@ COPY 	= copy
 DEL		= del
 
 default :
-	$(MAKE) img
+	$(MAKE) run
 
 ipl10.bin : ipl10.nas
 	$(NASK) ipl10.nas ipl10.bin ipl10.lst
@@ -35,9 +37,15 @@ bootpack.obj : bootpack.nas
 naskfunc.obj : naskfunc.nas
 	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
 
-bootpack.bim : bootpack.obj naskfunc.obj
+hankaku.bin : hankaku.txt
+	$(MAKEFONT) hankaku.txt hankaku.bin
+
+hankaku.obj : hankaku.bin
+	$(BIN2OBJ) hankaku.bin hankaku.obj _hankaku
+
+bootpack.bim : bootpack.obj naskfunc.obj hankaku.obj
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		bootpack.obj naskfunc.obj
+		bootpack.obj naskfunc.obj hankaku.obj
 
 bootpack.hrb : bootpack.bim
 	$(BIM2HRB) bootpack.bim bootpack.hrb 0
