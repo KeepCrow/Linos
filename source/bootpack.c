@@ -27,8 +27,8 @@ void io_store_eflags(int eflags);
 void set_palette(int start, int end, unsigned char *rgb);
 void init_palette(void);
 
-void boxfill8(char *vram, int xsize, unsigned char c, 
-                int x0, int y0, int xlen, int ylen);
+void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, 
+                int xlen, int ylen);
 void putblock8_8(char *vram, int vxsize, int pxsize, int pysize,
                     int px0, int py0, char *buf, int bxsize);
 
@@ -48,8 +48,8 @@ struct BOOTINFO
 /* 暂时无法修改为LinMain()，可惜可惜 */
 void HariMain(void)
 {
-    char *s[10];
-    char *mouse[256];
+    char s[10];
+    char mouse[256];
     int mx, my;
     struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
 
@@ -116,8 +116,8 @@ void set_palette(int start, int end, unsigned char *rgb)
     return;
 }
 
-void boxfill8(char *vram, int xsize, unsigned char c, 
-                int x0, int y0, int xlen, int ylen)
+void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, 
+                int xlen, int ylen)
 {
     int x, y;
     for (y = y0; y < y0 + ylen; y++)
