@@ -1,3 +1,5 @@
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctblc.obj
+
 TOOL 	= ../tolset/z_tools
 INC 	= $(TOOL)/linos
 
@@ -12,7 +14,6 @@ BIM2HRB		= $(TOOL)/bim2hrb.exe
 RULEFILE	= $(TOOL)/linos/linos.rul
 EDIMG 		= $(TOOL)/edimg.exe
 IMGTOL		= $(TOOL)/imgtol.com
-
 COPY 	= copy
 DEL		= del
 
@@ -25,27 +26,15 @@ ipl10.bin : ipl10.nas
 asmhead.bin : asmhead.nas
 	$(NASK) asmhead.nas asmhead.bin asmhead.lst
 
-bootpack.gas : bootpack.c
-	$(CC1) -o bootpack.gas bootpack.c
-
-bootpack.nas : bootpack.gas
-	$(GAS2NASK) bootpack.gas bootpack.nas
-
-bootpack.obj : bootpack.nas
-	$(NASK) bootpack.nas bootpack.obj bootpack.lst
-
-naskfunc.obj : naskfunc.nas
-	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
-
 hankaku.bin : hankaku.txt
 	$(MAKEFONT) hankaku.txt hankaku.bin
 
 hankaku.obj : hankaku.bin
 	$(BIN2OBJ) hankaku.bin hankaku.obj _hankaku
 
-bootpack.bim : bootpack.obj naskfunc.obj hankaku.obj
+bootpack.bim : $(OBJS_BOOTPACK)
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		bootpack.obj naskfunc.obj hankaku.obj
+		$(OBJS_BOOTPACK)
 
 bootpack.hrb : bootpack.bim
 	$(BIM2HRB) bootpack.bim bootpack.hrb 0
@@ -59,6 +48,18 @@ linos.img : ipl10.bin linos.sys
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:linos.sys to:@: \
 		imgout:linos.img
+
+%.gas : %.c
+	$(CC1) -o $*.gas $*.c
+
+%.nas : %.gas
+	$(GAS2NASK) $*.gas $*.nas
+
+%.obj : %.nas
+	$(NASK) $*.nas $*.obj $*.lst
+
+naskfunc.obj : naskfunc.nas
+	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
 
 img :
 	$(MAKE) linos.img
