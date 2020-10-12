@@ -180,51 +180,51 @@ void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py
     return;
 }
 
-void putpixle8(char *vram, int xsize, int x, int y, char c, char back, int pixle_size)
+void putpixle8(char *vram, int xsize, int x, int y, char c, char bc, int pixle_size)
 {
-    boxfill8(vram, xsize, back, x,     y,     pixle_size,     1);
-    boxfill8(vram, xsize, back, x,     y + 1, 1,              pixle_size);
+    boxfill8(vram, xsize, bc, x,     y,     pixle_size,     1);
+    boxfill8(vram, xsize, bc, x,     y + 1, 1,              pixle_size);
     boxfill8(vram, xsize, c,    x + 1, y + 1, pixle_size - 1, pixle_size - 1);
 }
 
-void putfont8_giant(char *vram, int xsize, int x, int y, char c, char back, char *font, int pixle_size)
+void putfont8_giant(char *vram, int xsize, int x, int y, char c, char bc, char *font, int psize)
 {
     int i;
     char d;     /* data */
 
-    // putpixle8(vram, xsize, x, y, c, back, pixle_size);
     for (i = 0; i < 16; i++)
     {
         d = font[i];
-        y += pixle_size;
+        y += psize;
+
         if ((d & 0x80) != 0)
-            putpixle8(vram, xsize, x + 0 * pixle_size, y, c, back, pixle_size);
+            putpixle8(vram, xsize, x + 0 * psize, y, c, bc, psize);
         if ((d & 0x40) != 0)
-            putpixle8(vram, xsize, x + 1 * pixle_size, y, c, back, pixle_size);
+            putpixle8(vram, xsize, x + 1 * psize, y, c, bc, psize);
         if ((d & 0x20) != 0)
-            putpixle8(vram, xsize, x + 2 * pixle_size, y, c, back, pixle_size);
+            putpixle8(vram, xsize, x + 2 * psize, y, c, bc, psize);
         if ((d & 0x10) != 0)
-            putpixle8(vram, xsize, x + 3 * pixle_size, y, c, back, pixle_size);
+            putpixle8(vram, xsize, x + 3 * psize, y, c, bc, psize);
         if ((d & 0x08) != 0)
-            putpixle8(vram, xsize, x + 4 * pixle_size, y, c, back, pixle_size);
+            putpixle8(vram, xsize, x + 4 * psize, y, c, bc, psize);
         if ((d & 0x04) != 0)
-            putpixle8(vram, xsize, x + 5 * pixle_size, y, c, back, pixle_size);
+            putpixle8(vram, xsize, x + 5 * psize, y, c, bc, psize);
         if ((d & 0x02) != 0)
-            putpixle8(vram, xsize, x + 6 * pixle_size, y, c, back, pixle_size);
+            putpixle8(vram, xsize, x + 6 * psize, y, c, bc, psize);
         if ((d & 0x01) != 0)
-            putpixle8(vram, xsize, x + 7 * pixle_size, y, c, back, pixle_size);
+            putpixle8(vram, xsize, x + 7 * psize, y, c, bc, psize);
     }
 
     return;
 }
 
-void show_logo8(char *vram, int xsize, int x, int y, char c, char back, unsigned char *logo, int pixle_size)
+void show_logo8(char *vram, int xsize, int x, int y, char c, char bc, unsigned char *logo, int psize)
 {
     extern char hankaku[4096];
     for (; *logo != 0x00; logo++)
     {
-        putfont8_giant(vram, xsize, x, y, c, back, hankaku + *logo * 16, pixle_size);
-        x += 8 * pixle_size;
+        putfont8_giant(vram, xsize, x, y, c, bc, hankaku + *logo * 16, psize);
+        x += 8 * psize;
     }
     return;
 }
