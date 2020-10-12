@@ -1,24 +1,4 @@
-#define BLACK           0   /* 000000 */
-#define BRIGHT_RED      1   /* FF0000 */
-#define BRIGHT_GREEN    2   /* 00FF00 */
-#define BRIGHT_YELLOW   3   /* FFFF00 */
-#define BRIGHT_BLUE     4   /* 0000FF */
-#define BRIGHT_PURPLE   5   /* FF00FF */
-#define LIGHT_BLUE      6   /* 00FFFF */
-#define WHITE           7   /* FFFFFF */
-#define BRIGHT_GRAY     8   /* C6C6C6 */
-#define DARK_RED        9   /* 840000 */
-#define DARK_GREEN      10  /* 008400 */
-#define DARK_YELLOW     11  /* 848400 */
-#define DARK_BLUE       12  /* 000084 */
-#define DARK_PURPLE     13  /* 840084 */
-#define LIGHT_DARK_BLUE 14  /* 008484 */
-#define DARK_GRAY       15  /* 848484 */
-
-void io_cli(void);
-void io_out8(int add, int data);
-int io_load_eflags();
-void io_store_eflags(int eflags);
+#include "bootpack.h"
 
 void set_palette(int start, int end, unsigned char *rgb)
 {
@@ -36,6 +16,7 @@ void set_palette(int start, int end, unsigned char *rgb)
         rgb += 3;
     }
     io_store_eflags(eflags);
+    io_sti();
     return;
 }
 
@@ -76,8 +57,7 @@ void init_palette(void)
  * @param[in]  xlen   色块水平长
  * @param[in]  ylen   色块垂直长
  */
-void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, 
-                int xlen, int ylen)
+void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int xlen, int ylen)
 {
     int x, y;
     for (y = y0; y < y0 + ylen; y++)
@@ -185,8 +165,7 @@ void init_mouse_cursor8(char *mouse, char bc)
  * @param vxsize 屏幕的宽度
  * @param pxsize 
  */
-void putblock8_8(char *vram, int vxsize, int pxsize, int pysize,
-                    int px0, int py0, char *buf, int bxsize)
+void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf, int bxsize)
 {
     int x, y;
     for (y = 0; y < pysize; y++)
