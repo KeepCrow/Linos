@@ -178,6 +178,11 @@ void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py
     return;
 }
 
+void show_logo8(char *vram, int xsize, int x, int y, char c, unsigned char *logo)
+{
+    
+}
+
 /**
  * @brief      初始化桌面背景
  *
