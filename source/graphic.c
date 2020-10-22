@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include "bootpack.h"
 
 void set_palette(int start, int end, unsigned char *rgb)
@@ -18,7 +17,6 @@ void set_palette(int start, int end, unsigned char *rgb)
         rgb += 3;
     }
     io_store_eflags(eflags);
-    io_sti();
     return;
 }
 
@@ -229,6 +227,15 @@ void show_logo8(char *vram, int xsize, int x, int y, char c, char bc, unsigned c
     return;
 }
 
+void show_line8(char *vram, int xsize, enum LineNum line_num, unsigned char *msg)
+{
+    int y = (line_num - 1) * 17;
+    boxfill8(vram, xsize, WHITE, 0, y, xsize, 1);
+    boxfill8(vram, xsize, BLACK, 0, y + 1, xsize, 16);
+    putfonts8_asc(vram, xsize, 0, y + 1, DARK_GRAY, msg);
+    return;
+}
+
 /**
  * @brief      初始化桌面背景
  *
@@ -236,7 +243,7 @@ void show_logo8(char *vram, int xsize, int x, int y, char c, char bc, unsigned c
  * @param[in]  xsize  屏幕水平像素数量
  * @param[in]  ysize  屏幕垂直像素数量
  */
-void init_screen(char *vram, int xsize, int ysize)
+void init_screen8(char *vram, int xsize, int ysize)
 {
     boxfill8(vram, xsize, LIGHT_DARK_BLUE, 0, 0, xsize, ysize - 28);
     boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 28, xsize, 1);
