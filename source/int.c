@@ -1,8 +1,7 @@
 #include "bootpack.h"
 
-#define PORT_KEYDAT     0x0060
-
-struct KEYBUF keybuf;
+struct FIFO8 keyfifo;
+struct FIFO8 mousefifo;
 
 /* pic的初始化 */
 void init_pic(void)
@@ -27,14 +26,8 @@ void init_pic(void)
 /* 来自键盘PS/2的中断 */
 void inthandler21(int *esp)
 {
-    unsigned char data;
     io_out8(PIC0_OCW2, 0x61);
-    data = io_in8(PORT_KEYDAT);
-    if (keybuf.flag == 0)
-    {
-        keybuf.flag = 1;
-        keybuf.data = data;
-    }
+    fifo8_put(&keyfifo, io_in8(PORT_KEYDAT));
     return;
 }
 
@@ -47,11 +40,8 @@ void inthandler27(int *esp)
 /* 来自鼠标PS/2的中断 */
 void inthandler2c(int *esp)
 {
-    struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
-    boxfill8(binfo->vram, binfo->scrnx, BLACK, 0, 0, 32 * 8, 16);
-    putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, WHITE, "INT 2C (IRQ-12) : PS/2 mouse");
-    for (;;)
-    {
-        io_hlt();
-    }
+    io_out8(PIC1_OCW2, 0x64);
+    io_out8(PIC0_OCW2, 0x62);
+    fifo8_put(&mousefifo, io_in8(PORT_KEYDAT));
+    return;
 }

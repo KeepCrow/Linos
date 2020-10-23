@@ -229,9 +229,8 @@ void show_logo8(char *vram, int xsize, int x, int y, char c, char bc, unsigned c
 
 void show_line8(char *vram, int xsize, enum LineNum line_num, unsigned char *msg)
 {
-    int y = (line_num - 1) * 17;
-    boxfill8(vram, xsize, WHITE, 0, y, xsize, 1);
-    boxfill8(vram, xsize, BLACK, 0, y + 1, xsize, 16);
+    int y = line_num * 17;
+    boxfill8(vram, xsize, BLACK, 0, y, xsize, 17);
     putfonts8_asc(vram, xsize, 0, y + 1, DARK_GRAY, msg);
     return;
 }
@@ -245,7 +244,7 @@ void show_line8(char *vram, int xsize, enum LineNum line_num, unsigned char *msg
  */
 void init_screen8(char *vram, int xsize, int ysize)
 {
-    boxfill8(vram, xsize, LIGHT_DARK_BLUE, 0, 0, xsize, ysize - 28);
+    boxfill8(vram, xsize, BACK_COLOR, 0, 0, xsize, ysize - 28);
     boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 28, xsize, 1);
     boxfill8(vram, xsize, WHITE, 0, ysize - 27, xsize, 1);
     boxfill8(vram, xsize, BRIGHT_GRAY, 0, ysize - 26, xsize, 26);

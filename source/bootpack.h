@@ -15,7 +15,13 @@ struct BOOTINFO
 void io_hlt(void);
 void io_cli(void);
 void io_sti(void);
+void io_stihlt(void);
 void io_out8(int add, int data);
+void io_out16(int add, int data);
+void io_out32(int add, int data);
+int io_in8(int add);
+int io_in16(int add);
+int io_in32(int add);
 int io_load_eflags();
 void io_store_eflags(int eflags);
 void load_gdtr(int limit, int addr);
@@ -41,11 +47,12 @@ void asm_inthandler2c(void);
 #define DARK_PURPLE     13  /* 840084 */
 #define LIGHT_DARK_BLUE 14  /* 008484 */
 #define DARK_GRAY       15  /* 848484 */
+#define BACK_COLOR      BLACK
 
 enum LineNum
 {
-    LN_KEYBOARD = 1,
-    LN_MOUSE
+    LN_MOUSE,
+    LN_KEYBOARD,
 };
 
 void init_palette(void);
@@ -102,12 +109,42 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define PIC1_ICW3       0x00a1
 #define PIC1_ICW4       0x00a1
 
+#define PORT_KEYDAT             0x0060
+#define PORT_KEYSTA             0x0064
+#define PORT_KEYCMD             0x0064
+#define KEYSTA_SEND_NOTREADY    0X02
+#define KBC_MODE                0x47
+#define KEYCMD_WRITE_MODE       0x60
+#define KEYCMD_SENDTO_MOUSE     0xd4
+#define MOUSECMD_ENABLE         0xf4
+
 struct KEYBUF
 {
-    unsigned char data, flag;
+    unsigned char data[32];
+    int next;
 };
 
 void init_pic(void);
 void inthandler21(int *esp);
 void inthandler27(int *esp);
 void inthandler2c(int *esp);
+
+/* fifo.c */
+#define FLAG_OVREFLOW       0x0001
+
+struct FIFO8
+{
+    unsigned char *buf; /* buf地址 */
+    int flag;   /* 是否溢出 */
+    int size;   /* buf大小(字节) */
+    int free;   /* 剩余字节数 */
+    int r;  /* 读写下标 */
+    int w;
+};
+
+/* 使用大小为size的buf初始fifo */
+void fifo8_init(struct FIFO8 *fifo, unsigned char *buf, int size);
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);
+int fifo8_get(struct FIFO8 *fifo);
+/* 已使用 */
+int fifo8_status(struct FIFO8 *fifo);
