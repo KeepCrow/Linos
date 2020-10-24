@@ -61,4 +61,7 @@ dkms.conf
 *.hrb
 *.sys
 *.img
+*.nas
+!naskfunc.nas
+!asmhead.nas
 
