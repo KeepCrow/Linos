@@ -35,28 +35,31 @@ void enable_mouse(struct MOUSE_DEC *mdec)
 
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
 {
-    if (dat == 0xfa)
-        return 0;
-
     if (mdec->phase == 0)
     {
-        if ((dat & 0xc8) == 0x08)
-        {
-            mdec->buf[mdec->phase] = dat;
+        if (dat == 0xfa)
             mdec->phase = 1;
-        }
         return 0;
     }
     else if (mdec->phase == 1)
     {
-        mdec->buf[mdec->phase] = dat;
-        mdec->phase = 2;
+        if ((dat & 0xc8) == 0x08)
+        {
+            mdec->buf[0] = dat;
+            mdec->phase = 2;
+        }
+        return 0;
+    }
+    else if (mdec->phase == 2)
+    {
+        mdec->buf[1] = dat;
+        mdec->phase = 3;
         return 0;
     }
     else
     {
-        mdec->buf[mdec->phase] = dat;
-        mdec->phase = 0;
+        mdec->buf[2] = dat;
+        mdec->phase = 1;
         mdec->btn = mdec->buf[0] & 0x07;    /* 111 */
         mdec->x = mdec->buf[1];
         mdec->y = mdec->buf[2];
