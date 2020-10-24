@@ -148,3 +148,14 @@ int fifo8_put(struct FIFO8 *fifo, unsigned char data);
 int fifo8_get(struct FIFO8 *fifo);
 /* 已使用 */
 int fifo8_status(struct FIFO8 *fifo);
+
+struct MOUSE_DEC
+{
+    unsigned char buf[3];
+    unsigned char phase;
+    int x, y;
+    int btn;
+};
+
+void enable_mouse(struct MOUSE_DEC *mdec);
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
