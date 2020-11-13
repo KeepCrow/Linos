@@ -130,7 +130,8 @@ void HariMain(void)
     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mouse, 16);
 
     /* 内存显示 */
-    i = memtest(0x00400000, 0xbfffffff);
+    // i = memtest(0x00400000, 0xbfffffff);
+    i = 0;
     sprintf(msg, "memory %dMB", i);
     show_line8(binfo->vram, binfo->scrnx, LN_MEM, msg);
 
