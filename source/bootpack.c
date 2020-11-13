@@ -2,83 +2,98 @@
 #include <string.h>
 #include "bootpack.h"
 
+#define EFLAGS_AC_BIT       0x00040000
+#define CR0_CACHE_DISABLE   0x60000000
+
 extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;
 
-void wait_KEB_sendready(void)
+int load_cr0();
+void store_cr0(int cr0);
+unsigned int memtest_sub(unsigned int start, unsigned int end);
+
+/* 判断CPU型号是否为486 */
+char is486(void)
 {
-    /* 等待keyboard controller准备完毕 */
-    while ((io_in8(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) != 0);
-    return;
+    char flg486;
+    unsigned int eflg;
+
+    eflg = io_load_eflags();
+    eflg |= EFLAGS_AC_BIT;
+    io_store_eflags(eflg);
+
+    eflg = io_load_eflags();
+    flg486 = (eflg & EFLAGS_AC_BIT != 0) ? 1 : 0;
+
+    /* 恢复原本的eflags寄存器值 */
+    eflg &= ~EFLAGS_AC_BIT;
+    io_store_eflags(eflg);
+
+    return flg486;
 }
 
-void init_keyboard(void)
+void disable_cache(char flg486)
 {
-    /* 初始化keyborad controller */
-    wait_KEB_sendready();
-    io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
-    wait_KEB_sendready();
-    io_out8(PORT_KEYDAT, KBC_MODE);
-    return;
+    unsigned int cr0;
+    if (flg486 == 1)
+    {
+        cr0 = load_cr0();
+        cr0 |= CR0_CACHE_DISABLE;
+        store_cr0(cr0);
+    }
 }
 
-void enable_mouse(struct MOUSE_DEC *mdec)
+void enable_cache(char flg486)
 {
-    /* 激活鼠标 */
-    wait_KEB_sendready();
-    io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
-    wait_KEB_sendready();
-    io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);  /* 这一句执行完毕后，鼠标会返回0xfa */
-    mdec->phase = 0;
-    return;
+    unsigned int cr0;
+    if (flg486 == 1)
+    {
+        cr0 = load_cr0();
+        cr0 &= ~CR0_CACHE_DISABLE;
+        store_cr0(cr0);
+    }
 }
 
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
+// char test_block(unsigned int *address)
+// {
+//     unsigned int old = *address, pat0 = 0xaa55aa55, pat1 = 0x55aa55aa;
+    
+//     /* 第一次试写 */
+//     *address = pat0;
+//     *address ^= 0xffffffff;
+//     if (*address != pat1)
+//         return 0;
+        
+//     /* 第二次试写 */
+//     *address ^= 0xffffffff;
+//     if (*address != pat0)
+//         return 0;
+    
+//     /* 还原内存块的值 */
+//     *address = old;
+//     return 1;
+// }
+
+// unsigned int memtest_sub(unsigned int start, unsigned int end)
+// {
+//     unsigned int i, j;
+//     for (i = start, j = 0; i <= end; i += 0x100000, j++)
+//         if (test_block((unsigned int *)(i + 0xffc)) == 0)
+//             break;
+//     return j;
+// }
+
+unsigned int memtest(unsigned int start, unsigned int end)
 {
-    if (mdec->phase == 0)
-    {
-        if (dat == 0xfa)
-            mdec->phase = 1;
-        return 0;
-    }
-    else if (mdec->phase == 1)
-    {
-        if ((dat & 0xc8) == 0x08)
-        {
-            mdec->buf[0] = dat;
-            mdec->phase = 2;
-        }
-        return 0;
-    }
-    else if (mdec->phase == 2)
-    {
-        mdec->buf[1] = dat;
-        mdec->phase = 3;
-        return 0;
-    }
-    else
-    {
-        mdec->buf[2] = dat;
-        mdec->phase = 1;
-        mdec->btn = mdec->buf[0] & 0x07;    /* 111 */
-        mdec->x = mdec->buf[1];
-        mdec->y = mdec->buf[2];
+    char flg486;
+    unsigned int mem_size = 0;
 
-        /* https://www.cnblogs.com/qiweiwang/archive/2011/03/21/1990346.html
-         * bit7: Y overflow     bit6: Y overflow        bit5: Y sign bit     
-         * bit4: X sign bit     bit3: always 1          bit2: middle btn
-         * bit1: right btn      bit0: left btn
-         */
-        if ((mdec->buf[0] & 0x10) != 0)
-            mdec->x |= 0xffffff00;
-        if ((mdec->buf[0] & 0x20) != 0)
-            mdec->y |= 0xffffff00;
-        mdec->y = -mdec->y; /* 鼠标的y方向与画面相反 */
+    flg486 = is486();
+    disable_cache(flg486);
+    mem_size = memtest_sub(start, end);
+    enable_cache(flg486);
 
-        return 1;
-    }
-
-    return -1;
+    return mem_size;
 }
 
 /* 暂时无法修改为LinMain() */
@@ -99,6 +114,7 @@ void HariMain(void)
 
     init_gdtidt();  /* 初始化gdt与idt */
     init_pic(); /* 初始化pic */
+    io_sti();
     init_keyboard();    /* 初始化键盘 */
     enable_mouse(&mdec); /* 使能鼠标 */
     io_sti();
@@ -106,17 +122,22 @@ void HariMain(void)
     init_palette(); /* 设置调色板 */
     init_screen8(binfo->vram, binfo->scrnx, binfo->scrny); 
     init_mouse_cursor8(mouse, BACK_COLOR);
+    fifo8_init(&keyfifo, keyfifo_buf, 32);
+    fifo8_init(&mousefifo, mousefifo_buf, 128);
 
     mx = (binfo->scrnx - 16) / 2;
     my = (binfo->scrny - 28 - 16) / 2;
     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mouse, 16);
 
+    /* 内存显示 */
+    i = memtest(0x00400000, 0xbfffffff);
+    sprintf(msg, "memory %dMB", i);
+    show_line8(binfo->vram, binfo->scrnx, LN_MEM, msg);
+
     /* 修改PIC以接收中断信号 */
     io_out8(PIC0_IMR, 0xf9);    /* 11111001 */
     io_out8(PIC1_IMR, 0xef);    /* 11101111 */
 
-    fifo8_init(&keyfifo, keyfifo_buf, 32);
-    fifo8_init(&mousefifo, mousefifo_buf, 128);
     while (1)
     {
         io_cli();

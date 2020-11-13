@@ -53,6 +53,7 @@ enum LineNum
 {
     LN_MOUSE,
     LN_KEYBOARD,
+    LN_MEM,
 };
 
 void init_palette(void);
@@ -149,6 +150,8 @@ int fifo8_get(struct FIFO8 *fifo);
 /* 已使用 */
 int fifo8_status(struct FIFO8 *fifo);
 
+
+/* mouse.c */
 struct MOUSE_DEC
 {
     unsigned char buf[3];
@@ -159,3 +162,7 @@ struct MOUSE_DEC
 
 void enable_mouse(struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
+
+/* keyboard.c */
+void wait_KBC_sendready(void);
+void init_keyboard(void);
