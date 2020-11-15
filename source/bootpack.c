@@ -1,115 +1,25 @@
 #include <stdio.h>
 #include <string.h>
 #include "bootpack.h"
-
-#define EFLAGS_AC_BIT       0x00040000
-#define CR0_CACHE_DISABLE   0x60000000
+#include "memory.h"
 
 extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;
 
-int load_cr0();
-void store_cr0(int cr0);
-unsigned int memtest_sub(unsigned int start, unsigned int end);
-
-/* 判断CPU型号是否为486 */
-char is486(void)
-{
-    char flg486;
-    unsigned int eflg;
-
-    eflg = io_load_eflags();
-    eflg |= EFLAGS_AC_BIT;
-    io_store_eflags(eflg);
-
-    eflg = io_load_eflags();
-    flg486 = (eflg & EFLAGS_AC_BIT != 0) ? 1 : 0;
-
-    /* 恢复原本的eflags寄存器值 */
-    eflg &= ~EFLAGS_AC_BIT;
-    io_store_eflags(eflg);
-
-    return flg486;
-}
-
-void disable_cache(char flg486)
-{
-    unsigned int cr0;
-    if (flg486 == 1)
-    {
-        cr0 = load_cr0();
-        cr0 |= CR0_CACHE_DISABLE;
-        store_cr0(cr0);
-    }
-}
-
-void enable_cache(char flg486)
-{
-    unsigned int cr0;
-    if (flg486 == 1)
-    {
-        cr0 = load_cr0();
-        cr0 &= ~CR0_CACHE_DISABLE;
-        store_cr0(cr0);
-    }
-}
-
-// char test_block(unsigned int *address)
-// {
-//     unsigned int old = *address, pat0 = 0xaa55aa55, pat1 = 0x55aa55aa;
-    
-//     /* 第一次试写 */
-//     *address = pat0;
-//     *address ^= 0xffffffff;
-//     if (*address != pat1)
-//         return 0;
-        
-//     /* 第二次试写 */
-//     *address ^= 0xffffffff;
-//     if (*address != pat0)
-//         return 0;
-    
-//     /* 还原内存块的值 */
-//     *address = old;
-//     return 1;
-// }
-
-// unsigned int memtest_sub(unsigned int start, unsigned int end)
-// {
-//     unsigned int i, j;
-//     for (i = start, j = 0; i <= end; i += 0x100000, j++)
-//         if (test_block((unsigned int *)(i + 0xffc)) == 0)
-//             break;
-//     return j;
-// }
-
-unsigned int memtest(unsigned int start, unsigned int end)
-{
-    char flg486;
-    unsigned int mem_size = 0;
-
-    flg486 = is486();
-    disable_cache(flg486);
-    mem_size = memtest_sub(start, end);
-    enable_cache(flg486);
-
-    return mem_size;
-}
-
 /* 暂时无法修改为LinMain() */
 void HariMain(void)
 {
-    char logo[16];
+    // char logo[16];
     char msg[32];
     char mouse[256];
     char keyfifo_buf[32];
     char mousefifo_buf[128];
-    int logox, logoy;
-    int i;
-    int mx, my;
-    int psize = 5;
-    int data;
-    struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
+    // int logox, logoy;
+    int i, mem_total, mx, my;
+    // int psize = 5;
+    // int data;
+    struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
+    struct MEMMAN *man = (struct MEMMAN *)MEMMAN_ADR;
     struct MOUSE_DEC mdec;
 
     init_gdtidt();  /* 初始化gdt与idt */
@@ -130,8 +40,12 @@ void HariMain(void)
     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mouse, 16);
 
     /* 内存显示 */
-    i = memtest(0x00400000, 0xbfffffff);
-    sprintf(msg, "memory %dMB", i);
+    mem_total = memtest(0x00400000, 0xbfffffff);
+    memman_init(man);
+    memman_free(man, 0x00001000, 0x0009e000);
+    memman_free(man, 0x00400000, mem_total - 0x00400000);
+    sprintf(msg, "memory %dMB free: %dKB", 
+            mem_total >> 20, memman_total(man) >> 10);
     show_line8(binfo->vram, binfo->scrnx, LN_MEM, msg);
 
     /* 修改PIC以接收中断信号 */

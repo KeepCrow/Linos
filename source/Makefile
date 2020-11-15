@@ -1,5 +1,5 @@
 OBJS_BOOTPACK = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj \
-				int.obj fifo.obj mouse.obj keyboard.obj
+				int.obj fifo.obj mouse.obj keyboard.obj memory.obj
 
 TOOL 	= ../tolset/z_tools
 INC 	= $(TOOL)/linos
@@ -36,6 +36,7 @@ hankaku.obj : hankaku.bin
 bootpack.bim : $(OBJS_BOOTPACK)
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
 		$(OBJS_BOOTPACK)
+# 3MB + 64KB = 3136KB
 
 bootpack.hrb : bootpack.bim
 	$(BIM2HRB) bootpack.bim bootpack.hrb 0
@@ -50,7 +51,7 @@ linos.img : ipl10.bin linos.sys
 		copy from:linos.sys to:@: \
 		imgout:linos.img
 
-%.gas : %.c
+%.gas : %.c bootpack.h
 	$(CC1) -o $*.gas $*.c
 
 %.nas : %.gas
@@ -58,9 +59,6 @@ linos.img : ipl10.bin linos.sys
 
 %.obj : %.nas
 	$(NASK) $*.nas $*.obj $*.lst
-
-naskfunc.obj : naskfunc.nas
-	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
 
 img :
 	$(MAKE) linos.img
@@ -76,9 +74,7 @@ run :
 clean :
 	-$(DEL) *.bin
 	-$(DEL) *.lst
-	-$(DEL) *.gas
 	-$(DEL) *.obj
-	-$(DEL) bootpack.nas
 	-$(DEL) bootpack.map
 	-$(DEL) bootpack.bim
 	-$(DEL) bootpack.hrb

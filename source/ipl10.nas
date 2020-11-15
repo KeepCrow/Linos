@@ -91,6 +91,10 @@ putloop:
     ADD     SI, 1       ; 处理下一个字节
     JMP     putloop
 
+fin:
+    HLT
+    JMP fin
+
 msg:
     DB      0x0a, 0x0a   ; 换行2次
     DB      "load error"
