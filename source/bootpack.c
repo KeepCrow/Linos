@@ -39,12 +39,18 @@ void HariMain(void)
     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mouse, 16);
 
     /* 内存显示 */
+<<<<<<< HEAD
     mem_total = memtest(0x00400000, 0xbfffffff);
     memman_init(man);
     memman_free(man, 0x00001000, 0x0009e000);
     memman_free(man, 0x00400000, mem_total - 0x00400000);
     sprintf(msg, "memory %dMB free: %dKB", 
             mem_total >> 20, memman_total(man) >> 10);
+=======
+    // i = memtest(0x00400000, 0xbfffffff);
+    i = 0;
+    sprintf(msg, "memory %dMB", i);
+>>>>>>> 0cc17d6770f07c3adad554bf1dad656e31933156
     show_line8(binfo->vram, binfo->scrnx, LN_MEM, msg);
 
     /* 修改PIC以接收中断信号 */
