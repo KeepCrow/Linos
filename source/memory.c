@@ -88,6 +88,14 @@ unsigned int memman_alloc(struct MEMMAN *man, unsigned int size)
     return addr;
 }
 
+unsigned int memman_alloc4k(struct MEMMAN *man, unsigned int size)
+{
+    unsigned int addr;
+    size = (size + 0xfff) & 0xfffff000;
+    addr = memman_alloc(man, size);
+    return addr;
+}
+
 /* 将两个内存块组合，成功返回1，失败返回0 */
 static int fi_combine(struct FREEINFO *pre, struct FREEINFO *next)
 {
@@ -143,6 +151,14 @@ int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size)
     /* 无法插入 */
     free_lost(man, addr, size);
     return -1;
+}
+
+int memman_free4k(struct MEMMAN *man, unsigned addr, unsigned int size)
+{
+    int i;
+    size = (size + 0xfff) & 0xfffff000;
+    i = memman_free(man, addr, size);
+    return i;
 }
 
 /* 判断CPU型号是否为486 */

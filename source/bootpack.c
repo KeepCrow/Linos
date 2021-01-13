@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "bootpack.h"
-#include "memory.h"
 
 extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;

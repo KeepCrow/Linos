@@ -1,4 +1,6 @@
-#include "bootpack.h"
+#include "int.h"
+#include "dsctbl.h"
+#include "fifo.h"
 
 struct FIFO8 keyfifo;
 struct FIFO8 mousefifo;

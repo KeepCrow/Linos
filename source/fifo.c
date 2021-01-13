@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "bootpack.h"
+#include "fifo.h"
 
 int safe_add(int cur, int limit)
 {

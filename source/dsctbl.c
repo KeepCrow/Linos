@@ -1,4 +1,5 @@
-#include "bootpack.h"
+#include "dsctbl.h"
+#include "naskfunc.h"
 
 /* 向段表中添加一个段信息 */
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar)

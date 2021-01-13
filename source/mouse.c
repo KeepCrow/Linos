@@ -1,4 +1,5 @@
-#include "bootpack.h"
+#include "mouse.h"
+#include "int.h"
 
 void enable_mouse(struct MOUSE_DEC *mdec)
 {

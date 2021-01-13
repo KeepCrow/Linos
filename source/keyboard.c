@@ -1,4 +1,5 @@
-#include "bootpack.h"
+#include "keyboard.h"
+#include "int.h"
 
 void wait_KBC_sendready(void)
 {
