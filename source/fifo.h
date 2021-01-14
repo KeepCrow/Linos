@@ -13,11 +13,9 @@ struct FIFO8
     int w;
 };
 
-/* 使用大小为size的buf初始fifo */
 void fifo8_init(struct FIFO8 *fifo, unsigned char *buf, int size);
 int fifo8_put(struct FIFO8 *fifo, unsigned char data);
 int fifo8_get(struct FIFO8 *fifo);
-/* 已使用 */
 int fifo8_status(struct FIFO8 *fifo);
 
 #endif

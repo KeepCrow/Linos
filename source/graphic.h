@@ -18,6 +18,14 @@
 #define LIGHT_DARK_BLUE 14  /* 008484 */
 #define DARK_GRAY       15  /* 848484 */
 #define BACK_COLOR      BLACK
+#define INVI_COLOR      99
+
+#define LINE_SPAN       20  /* 行高 */
+#define MAX_LINE        10
+#define FONT_WIDTH      8   /* 字符宽 */ 
+#define FONT_HEIGHT     16  /* 字符高 */
+#define FONT_MARGIN_Y   ((LINE_SPAN - FONT_HEIGHT) / 2)
+#define FONT_MARGIN_X   2
 
 enum LineNum
 {

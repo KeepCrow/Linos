@@ -76,7 +76,7 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
     char d;     /* data */
     char *p;
 
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < FONT_HEIGHT; i++)
     {
         p = vram + (y + i) * xsize + x;
         d = font[i];
@@ -110,7 +110,13 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
     for (; *s != 0x00; s++)
     {
         putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
-        x += 8;
+        x += FONT_WIDTH + FONT_MARGIN_X;
+        
+        if (x > xsize - FONT_WIDTH)
+        {
+            x = 0;
+            y += LINE_SPAN;
+        }
     }
     return;
 }
@@ -190,7 +196,7 @@ void putfont8_giant(char *vram, int xsize, int x, int y, char c, char bc, char *
     int i;
     char d;     /* data */
 
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < FONT_HEIGHT; i++)
     {
         d = font[i];
         y += psize;
@@ -222,16 +228,16 @@ void show_logo8(char *vram, int xsize, int x, int y, char c, char bc, unsigned c
     for (; *logo != 0x00; logo++)
     {
         putfont8_giant(vram, xsize, x, y, c, bc, hankaku + *logo * 16, psize);
-        x += 8 * psize;
+        x += FONT_WIDTH * psize;
     }
     return;
 }
 
 void show_line8(char *vram, int xsize, enum LineNum line_num, unsigned char *msg)
 {
-    int y = line_num * 17;
-    boxfill8(vram, xsize, BLACK, 0, y, xsize, 17);
-    putfonts8_asc(vram, xsize, 0, y + 1, DARK_GRAY, msg);
+    int y = line_num * LINE_SPAN;
+    boxfill8(vram, xsize, BLACK, 0, y, xsize, LINE_SPAN);
+    putfonts8_asc(vram, xsize, 1, y + FONT_MARGIN_Y, DARK_GRAY, msg);
     return;
 }
 

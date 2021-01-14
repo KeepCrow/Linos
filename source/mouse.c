@@ -1,5 +1,6 @@
 #include "mouse.h"
 #include "int.h"
+#include "debug.h"
 
 void enable_mouse(struct MOUSE_DEC *mdec)
 {
