@@ -47,18 +47,46 @@ void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, i
 
 /**
  * @brief 将[st, ed]范围的sheet全部上移一层
+ *        NOTE: sheets[ed + 1]的元素会被覆盖
  * 
  * @param shtctl sheet管理器
  * @param st     上移的最低层的高度
  * @param ed     上移的最高层的高度
  */
-static void sheet_rise(struct SHTCTL *shtctl, int st, int ed)
+static inline void sheet_up(struct SHTCTL *shtctl, int st, int ed)
 {
     int i;
-    for (i = ed; i > st; i++)
+    
+    if (ed == shtctl->top)
+        shtctl->top += 1;
+
+    for (i = ed; i >= st; i--)
     {
         shtctl->sheets[i]->height += 1;
-        shtctl->sheets[i] = shtctl->sheets[i - 1];
+        shtctl->sheets[i + 1] = shtctl->sheets[i];
+    }
+
+}
+
+/**
+ * @brief 将[st, ed]范围的sheet全部下移一层
+ *        NOTE: sheets[st - 1]的元素会被覆盖
+ * 
+ * @param shtctl sheet管理器
+ * @param st     下移的最低层的高度
+ * @param ed     下移的最高层的高度
+ */
+static inline void sheet_down(struct SHTCTL *shtctl, int st, int ed)
+{
+    int i;
+
+    if (ed == shtctl->top)
+        shtctl->top -= 1;
+
+    for (i = st; i <= ed; i++)
+    {
+        shtctl->sheets[i]->height -= 1;
+        shtctl->sheets[i - 1] = shtctl->sheets[i];
     }
 }
 
@@ -67,58 +95,31 @@ void sheet_updown(struct SHTCTL *shtctl, struct SHEET *sht, int height)
     int h;
     int old = sht->height;
 
-    /* 如果height过高或过低, 修正 */
+    /* 如果height过高或过低, 修正之 */
     height = (height > shtctl->top) ? (shtctl->top + 1) : height;
     height = (height < -1) ? -1 : height;
     sht->height = height;
     
     if (old == height)
-    {
         return;
-    }
 
-    /* 显示sheet */
-    if (old == -1)
+    if (old == -1)          /* 显示sheet */
     {
-        for (h = shtctl->top; h > height; h--)
-        {
-            shtctl->sheets[h]->height += 1;
-            shtctl->sheets[h] = shtctl->sheets[h - 1];
-        }
-        shtctl->top += 1;
+        sheet_up(shtctl, height, shtctl->top);
         shtctl->sheets[height] = sht;
     }
-
-    /* 隐藏sheet */
-    else if (height == -1)
+    else if (height == -1)  /* 隐藏sheet */
     {
-        for (h = old; h < shtctl->top; h++)
-        {
-            shtctl->sheets[h]->height -= 1;
-            shtctl->sheets[h] = shtctl->sheets[h + 1];
-        }
-        shtctl->top -= 1;
+        sheet_down(shtctl, height + 1, shtctl->top);
     }
-
-    /* 升高sheet */
-    else if (old < height)
+    else if (old < height)  /* 升高sheet */
     {
-        for (h = old; h < height; h++)
-        {
-            shtctl->sheets[h]->height -= 1;
-            shtctl->sheets[h] = shtctl->sheets[h + 1];
-        }
+        sheet_down(shtctl, old + 1, height);
         shtctl->sheets[height] = sht;
     }
-
-    /* 降低sheet */
-    else if (old > height)
+    else if (old > height)  /* 降低sheet */
     {
-        for (h = old; h > height; h++)
-        {
-            shtctl->sheets[h]->height += 1;
-            shtctl->sheets[h] = shtctl->sheets[h - 1];
-        }
+        sheet_up(shtctl, height, old - 1);
         shtctl->sheets[height] = sht;
     }
 
@@ -136,7 +137,7 @@ void sheet_refresh(struct SHTCTL *shtctl, struct SHEET *sht, int bx0, int by0, i
 void sheet_refreshsub(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1)
 {
     int h, bx, by, vx, vy;
-    int bx0, by0, bx1, by1;
+    int bx0, by0, bx1, by1; /* sheet内相对坐标 */
     unsigned char c;
     struct SHEET *sht;
 
@@ -144,6 +145,7 @@ void sheet_refreshsub(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1)
     {
         sht = shtctl->sheets[h];
 
+        /* 通过绝对坐标计算相对坐标 */
         bx0 = vx0 - sht->vx0;
         by0 = vy0 - sht->vy0;
         bx1 = vx1 - sht->vx0;
