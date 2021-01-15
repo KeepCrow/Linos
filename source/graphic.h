@@ -1,6 +1,8 @@
 #ifndef _GRAPHIC_H_
 #define _GRAPHIC_H_
 
+#include "sheet.h"
+
 #define BLACK           0   /* 000000 */
 #define BRIGHT_RED      1   /* FF0000 */
 #define BRIGHT_GREEN    2   /* 00FF00 */
@@ -35,12 +37,12 @@ enum LineNum
 };
 
 void init_palette(void);
-void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int xlen, int ylen);
-void init_screen8(char *vram, int xsize, int ysize); 
-void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf, int bxsize);
+void boxfill8(char *buf, int xsize, unsigned char c, int x0, int y0, int xlen, int ylen);
+void init_screen8(char *buf, int xsize, int ysize); 
+void putblock8_8(char *buf, int vxsize, int pxsize, int pysize, int px0, int py0, char *block_buf, int bxsize);
 void init_mouse_cursor8(char *mouse, char bc);
-void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
-void show_logo8(char *vram, int xsize, int x, int y, char c, char bc, unsigned char *logo, int psize);
-void show_line8(char *vram, int xsize, enum LineNum line_num, unsigned char *msg);
+void putfonts8_asc(char *buf, int xsize, int x, int y, char c, unsigned char *s);
+void show_logo8(char *buf, int xsize, int x, int y, char c, char bc, unsigned char *logo, int psize);
+void show_line8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg);
 
 #endif

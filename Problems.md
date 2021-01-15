@@ -109,9 +109,26 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
 
 
 
+## Day10
+
+#### 无法显示sheet
+
+`sheet_setbuf()`初始化代码错误，将`bxsize`与`bysize`设置到了`vx0`与`vy0`上
 
 
 
+#### 鼠标无法移动，无法显示主界面输出内容
+
+1. 将mouse的buffer设置到了`shtback`上，使得背景无法显示
+
+修改了上述问题后可以显示背景，但是依然无法移动鼠标，观察后发现似乎没有进入鼠标坐标更新代码中
+
+发现是因为访问了`shtctl`的内存才会导致无法更新鼠标
+
+
+
+#### 鼠标无法移动，当键盘刷新时才会被刷新
+`sheet_refreshsub`函数`h`初始化错误
 
 
 

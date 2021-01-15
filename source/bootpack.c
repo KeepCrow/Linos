@@ -43,27 +43,27 @@ void HariMain(void)
     memman_free(man, 0x00001000, 0x0009e000);
     memman_free(man, 0x00400000, mem_total - 0x00400000);
 
-    bufback = memman_alloc4k(man, binfo->scrnx * binfo->scrny);
+    bufback = (unsigned char *)memman_alloc4k(man, binfo->scrnx * binfo->scrny);
     init_screen8(bufback, binfo->scrnx, binfo->scrny); 
     init_mouse_cursor8(bufmouse, INVI_COLOR);
 
     shtctl = shtctl_init(man, binfo->vram, binfo->scrnx, binfo->scrny);
     shtback = sheet_alloc(shtctl);
     sheet_setbuf(shtback, bufback, binfo->scrnx, binfo->scrny, -1);
-    sheet_slide(shtctl, shtback, 0, 0);
+    sheet_slide(shtback, 0, 0);
 #ifndef bootpack_debug
-    sheet_updown(shtctl, shtback, 0);
+    sheet_updown(shtback, 0);
 #endif
     shtmouse = sheet_alloc(shtctl);
     sheet_setbuf(shtmouse, bufmouse, 16, 16, INVI_COLOR);
     mx = (binfo->scrnx - 16) / 2;
     my = (binfo->scrny - 28 - 16) / 2;
-    sheet_slide(shtctl, shtmouse, mx, my);
-    sheet_updown(shtctl, shtmouse, 1);
+    sheet_slide(shtmouse, mx, my);
+    sheet_updown(shtmouse, 1);
 
     /* 内存显示 */
     sprintf(msg, "memory %dMB free: %dKB", mem_total >> 20, memman_total(man) >> 10);
-    show_line8(bufback, binfo->scrnx, LN_MEM, msg);
+    show_line8(shtback, LN_MEM, msg);
 
 #ifdef bootpack_debug
     debug_printf("shtback:%p[h:%d,x:%d,y:%d]", shtback, shtback->height, shtback->vx0, shtback->vy0);
@@ -72,7 +72,7 @@ void HariMain(void)
     debug_printf("mouse:[x:%d,y:%d]", mx, my);
 #endif
 
-    sheet_refresh(shtctl, shtback, 0, 0, binfo->scrnx, binfo->scrny);
+    sheet_refresh(shtback, 0, 0, binfo->scrnx, binfo->scrny);
 
     while (1)
     {
@@ -82,8 +82,7 @@ void HariMain(void)
             /* 输出字符 */
             io_sti();
             sprintf(msg, "keyboard input: %02X", fifo8_get(&keyfifo));
-            show_line8(bufback, binfo->scrnx, LN_KEYBOARD, msg);
-            sheet_refresh(shtctl, shtback, 0, LN_KEYBOARD * LINE_SPAN, binfo->scrnx, (LN_KEYBOARD + 1) * LINE_SPAN);
+            show_line8(shtback, LN_KEYBOARD, msg);
         }
         else if (fifo8_status(&mousefifo) != 0)
         {
@@ -105,13 +104,12 @@ void HariMain(void)
                     msg[17] = 'R';
                 else if ((mdec.btn & 0x04) != 0)
                     msg[16] = 'C';
-                show_line8(bufback, binfo->scrnx, LN_MOUSE, msg);
-                sheet_refresh(shtctl, shtback, 0, LN_MOUSE * LINE_SPAN, binfo->scrnx, (LN_MOUSE + 1) * LINE_SPAN);
+                show_line8(shtback, LN_MOUSE, msg);
 
 #ifdef bootpack_debug
                 debug_printf("mouse[%d, %d]", mx, my);
 #endif
-                sheet_slide(shtctl, shtmouse, mx, my);
+                sheet_slide(shtmouse, mx, my);
             }
         }
         io_stihlt();
