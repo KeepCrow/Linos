@@ -145,6 +145,11 @@ void sheet_refreshsub(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1)
     {
         sht = shtctl->sheets[h];
 
+        if (vx0 < 0) vx0 = 0;
+        if (vy0 < 0) vy0 = 0;
+        if (vx1 > shtctl->bxsize) vx1 = shtctl->xsize;
+        if (vy1 > shtctl->ysize) vy1 = shtctl->ysize;
+
         /* 通过绝对坐标计算相对坐标 */
         bx0 = vx0 - sht->vx0;
         by0 = vy0 - sht->vy0;
