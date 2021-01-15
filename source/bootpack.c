@@ -85,7 +85,7 @@ void HariMain(void)
             show_line8(bufback, binfo->scrnx, LN_KEYBOARD, msg);
             sheet_refresh(shtctl, shtback, 0, LN_KEYBOARD * LINE_SPAN, binfo->scrnx, (LN_KEYBOARD + 1) * LINE_SPAN);
         }
-        if (fifo8_status(&mousefifo) != 0)
+        else if (fifo8_status(&mousefifo) != 0)
         {
             io_sti();
             if (mouse_decode(&mdec, fifo8_get(&mousefifo)) == 1)
