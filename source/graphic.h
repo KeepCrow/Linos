@@ -19,7 +19,7 @@
 #define DARK_PURPLE     13  /* 840084 */
 #define LIGHT_DARK_BLUE 14  /* 008484 */
 #define DARK_GRAY       15  /* 848484 */
-#define BACK_COLOR      BLACK
+#define BACK_COLOR      LIGHT_DARK_BLUE
 #define INVI_COLOR      99
 
 #define LINE_SPAN       20  /* 行高 */
@@ -40,7 +40,6 @@ void init_palette(void);
 void boxfill8(char *buf, int xsize, unsigned char c, int x0, int y0, int xlen, int ylen);
 void init_screen8(char *buf, int xsize, int ysize); 
 void putblock8_8(char *buf, int vxsize, int pxsize, int pysize, int px0, int py0, char *block_buf, int bxsize);
-void init_mouse_cursor8(char *mouse, char bc);
 void putfonts8_asc(char *buf, int xsize, int x, int y, char c, unsigned char *s);
 void show_logo8(char *buf, int xsize, int x, int y, char c, char bc, unsigned char *logo, int psize);
 void show_line8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg);

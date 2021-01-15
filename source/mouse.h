@@ -11,5 +11,6 @@ struct MOUSE_DEC
 
 void enable_mouse(struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
+void init_mouse_cursor8(char *mouse, char bc);
 
 #endif

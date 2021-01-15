@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "bootpack.h"
+#include "debug.h"
 
 // #define bootpack_debug
 
@@ -16,15 +17,15 @@ void HariMain(void)
     char keyfifo_buf[32];
     char mousefifo_buf[128];
     // int logox, logoy;
-    int mem_total, mx, my;
+    int mem_total, mx, my, count = 0;
     // int psize = 5;
     // int data;
     struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
     struct MEMMAN *man = (struct MEMMAN *)MEMMAN_ADR;
     struct MOUSE_DEC mdec;
     struct SHTCTL *shtctl;
-    struct SHEET *shtback, *shtmouse; 
-    unsigned char *bufback;
+    struct SHEET *shtback, *shtmouse, *shtwin;
+    unsigned char *bufback, *bufwin;
 
     init_gdtidt();  /* 初始化gdt与idt */
     init_pic(); /* 初始化pic */
@@ -44,7 +45,9 @@ void HariMain(void)
     memman_free(man, 0x00400000, mem_total - 0x00400000);
 
     bufback = (unsigned char *)memman_alloc4k(man, binfo->scrnx * binfo->scrny);
-    init_screen8(bufback, binfo->scrnx, binfo->scrny); 
+    bufwin  = (unsigned char *)memman_alloc4k(man, 160 * 52);
+    init_screen8(bufback, binfo->scrnx, binfo->scrny);
+    make_window8(bufwin, 160, 52, "Window");
     init_mouse_cursor8(bufmouse, INVI_COLOR);
 
     shtctl = shtctl_init(man, binfo->vram, binfo->scrnx, binfo->scrny);
@@ -54,12 +57,16 @@ void HariMain(void)
 #ifndef bootpack_debug
     sheet_updown(shtback, 0);
 #endif
+    shtwin = sheet_alloc(shtctl);
+    sheet_setbuf(shtwin, bufwin, 160, 52, -1);
+    sheet_slide(shtwin, 80, 72);
+    sheet_updown(shtwin, 1);
     shtmouse = sheet_alloc(shtctl);
     sheet_setbuf(shtmouse, bufmouse, 16, 16, INVI_COLOR);
     mx = (binfo->scrnx - 16) / 2;
     my = (binfo->scrny - 28 - 16) / 2;
     sheet_slide(shtmouse, mx, my);
-    sheet_updown(shtmouse, 1);
+    sheet_updown(shtmouse, 2);
 
     /* 内存显示 */
     sprintf(msg, "memory %dMB free: %dKB", mem_total >> 20, memman_total(man) >> 10);
@@ -76,6 +83,12 @@ void HariMain(void)
 
     while (1)
     {
+        count += 1;
+        sprintf(msg, "count:%09d", count);
+        boxfill8(bufwin, 160, BRIGHT_GRAY, 4, 28, 160 - 6, 16);
+        putfonts8_asc(bufwin, 160, 4, 28, WHITE, msg);
+        sheet_refresh(shtwin, 4, 28, 160, 44);
+
         io_cli();
         if (fifo8_status(&keyfifo) != 0)
         {

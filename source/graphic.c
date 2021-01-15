@@ -121,50 +121,6 @@ void putfonts8_asc(char *buf, int xsize, int x, int y, char c, unsigned char *s)
     return;
 }
 
-void init_mouse_cursor8(char *mouse, char bc)
-{
-    static char cursor[16][16] = {
-        "**************..",
-        "*OOOOOOOOOOO*...",
-        "*OOOOOOOOOO*....",
-        "*OOOOOOOOO*.....",
-        "*OOOOOOOO*......",
-        "*OOOOOOO*.......",
-        "*OOOOOOO*.......",
-        "*OOOOOOOO*......",
-        "*OOOO**OOO*.....",
-        "*OOO*..*OOO*....",
-        "*OO*....*OOO*...",
-        "*O*......*OOO*..",
-        "**........*OOO*.",
-        "*..........*OOO*",
-        "............*OO*",
-        ".............***"
-    };
-    int x, y;
-
-    for (y = 0; y < 16; y++)
-    {
-        for (x = 0; x < 16; x++)
-        {
-            switch (cursor[y][x])
-            {
-            case '*':
-                mouse[y * 16 + x] = BLACK;
-                break;
-            case 'O':
-                mouse[y * 16 + x] = WHITE; 
-                break;
-            case '.':
-                mouse[y * 16 + x] = bc;
-                break;
-            default:
-                break;
-            }
-        }
-    }
-}
-
 /**
  * @brief 将一个block放到屏幕上.
  * @param vram 显存地址
@@ -239,7 +195,7 @@ void show_line8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
     int y = line_num * LINE_SPAN;
 
     boxfill8(sht->buf, xsize, BACK_COLOR, 0, y, xsize, LINE_SPAN);
-    putfonts8_asc(sht->buf, xsize, 1, y + FONT_MARGIN_Y, DARK_GRAY, msg);
+    putfonts8_asc(sht->buf, xsize, 1, y + FONT_MARGIN_Y, WHITE, msg);
     sheet_refresh(sht, 1, y + FONT_MARGIN_Y, xsize, y + LINE_SPAN);
     return;
 }

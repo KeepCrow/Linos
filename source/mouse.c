@@ -63,3 +63,47 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
 
     return -1;
 }
+
+void init_mouse_cursor8(char *mouse, char bc)
+{
+    static char cursor[16][16] = {
+        "**************..",
+        "*OOOOOOOOOOO*...",
+        "*OOOOOOOOOO*....",
+        "*OOOOOOOOO*.....",
+        "*OOOOOOOO*......",
+        "*OOOOOOO*.......",
+        "*OOOOOOO*.......",
+        "*OOOOOOOO*......",
+        "*OOOO**OOO*.....",
+        "*OOO*..*OOO*....",
+        "*OO*....*OOO*...",
+        "*O*......*OOO*..",
+        "**........*OOO*.",
+        "*..........*OOO*",
+        "............*OO*",
+        ".............***"
+    };
+    int x, y;
+
+    for (y = 0; y < 16; y++)
+    {
+        for (x = 0; x < 16; x++)
+        {
+            switch (cursor[y][x])
+            {
+            case '*':
+                mouse[y * 16 + x] = BLACK;
+                break;
+            case 'O':
+                mouse[y * 16 + x] = WHITE; 
+                break;
+            case '.':
+                mouse[y * 16 + x] = bc;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+}

@@ -10,7 +10,7 @@
 #include "mouse.h"
 #include "naskfunc.h"
 #include "sheet.h"
-#include "debug.h"
+#include "window.h"
 
 #define ADR_BOOTINFO    0x00000ff0
 
