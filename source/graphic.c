@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "naskfunc.h"
 #include "graphic.h"
 
 void set_palette(int start, int end, unsigned char *rgb)

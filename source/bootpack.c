@@ -1,12 +1,23 @@
 #include <stdio.h>
 #include <string.h>
 #include "bootpack.h"
-#include "debug.h"
+#include "dsctbl.h"
+#include "fifo.h"
+#include "graphic.h"
+#include "int.h"
+#include "keyboard.h"
+#include "memory.h"
+#include "mouse.h"
+#include "naskfunc.h"
+#include "sheet.h"
+#include "window.h"
+#include "timer.h"
 
 // #define bootpack_debug
 
 extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;
+extern struct TIMERCTL timerctl;
 
 /* 暂时无法修改为LinMain() */
 void HariMain(void)
@@ -32,7 +43,8 @@ void HariMain(void)
     io_sti();
     fifo8_init(&keyfifo, keyfifo_buf, 32);
     fifo8_init(&mousefifo, mousefifo_buf, 128);
-    io_out8(PIC0_IMR, 0xf9);    /* 11111001 */
+    init_pit();
+    io_out8(PIC0_IMR, 0xf8);    /* 11111000 */
     io_out8(PIC1_IMR, 0xef);    /* 11101111 */
     init_palette(); /* 设置调色板 */
 
@@ -83,8 +95,7 @@ void HariMain(void)
 
     while (1)
     {
-        count += 1;
-        sprintf(msg, "count:%09d", count);
+        sprintf(msg, "count:%09d", timerctl.count);
         boxfill8(bufwin, 160, BRIGHT_GRAY, 4, 28, 160 - 6, 16);
         putfonts8_asc(bufwin, 160, 4, 28, WHITE, msg);
         sheet_refresh(shtwin, 4, 28, 160, 44);

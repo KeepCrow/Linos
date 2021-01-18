@@ -30,8 +30,6 @@ struct KEYBUF
 };
 
 void init_pic(void);
-void inthandler21(int *esp);
 void inthandler27(int *esp);
-void inthandler2c(int *esp);
 
 #endif

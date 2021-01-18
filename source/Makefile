@@ -1,6 +1,6 @@
 OBJS_BOOTPACK = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj \
 				int.obj fifo.obj mouse.obj keyboard.obj memory.obj sheet.obj \
-				window.obj
+				window.obj timer.obj
 
 TOOL 	= ../tolset/z_tools
 INC 	= $(TOOL)/linos

@@ -3,5 +3,6 @@
 
 void wait_KBC_sendready(void);
 void init_keyboard(void);
+void inthandler21(int *esp);
 
 #endif

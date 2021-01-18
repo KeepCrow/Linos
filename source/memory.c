@@ -16,7 +16,7 @@ void memman_init(struct MEMMAN *man)
 
 unsigned int memman_total(struct MEMMAN *man)
 {
-    unsigned int i, total;
+    unsigned int i, total = 0;
     for (i = 0; i < man->frees; i++)
         total += man->free[i].size;
     return total;

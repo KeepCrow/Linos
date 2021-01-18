@@ -1,14 +1,21 @@
 #include "sheet.h"
 #include "debug.h"
 
-struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize)
+struct SHTCTL *shtctl_init(struct MEMMAN *man, unsigned char *vram, int xsize, int ysize)
 {
     int i;
     struct SHTCTL *shtctl;
-    shtctl = (struct SHTCTL *)memman_alloc4k(memman, sizeof(struct SHTCTL));
+    shtctl = (struct SHTCTL *)memman_alloc4k(man, sizeof(struct SHTCTL));
     if (shtctl == 0)
+        return 0;    
+
+    shtctl->map = (unsigned char *)memman_alloc4k(man, xsize * ysize);
+    if (shtctl->map == 0)
+    {
+        memman_free4k(man, (unsigned int)shtctl, sizeof(struct SHTCTL));
         return 0;
-    
+    }
+
     shtctl->vram  = vram;
     shtctl->xsize = xsize;
     shtctl->ysize = ysize;
@@ -48,6 +55,86 @@ void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, i
     return;
 }
 
+void sheet_refreshmap(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1, int h0)
+{
+    int vx, vy;
+    int h, bx, by;
+    int bx0, by0, bx1, by1;
+    unsigned char sid;
+    struct SHEET *sht;
+
+    vx0 = (vx0 < 0) ? 0 : vx0;
+    vy0 = (vy0 < 0) ? 0 : vy0;
+    vx1 = (vx1 > shtctl->xsize) ? shtctl->xsize : vx1;
+    vy1 = (vy1 > shtctl->ysize) ? shtctl->ysize : vy1;
+
+    for (h = h0; h <= shtctl->top; h++)
+    {
+        sht = shtctl->sheets[h];
+        sid = sht - shtctl->sheets0;
+
+        bx0 = (vx0 - sht->vx0) < 0 ? 0 : (vx0 - sht->vx0);
+        by0 = (vy0 - sht->vy0) < 0 ? 0 : (vy0 - sht->vy0);
+        bx1 = (vx1 - sht->vx0) > sht->bxsize ? sht->bxsize : (vx1 - sht->vx0);
+        by1 = (vy1 - sht->vy0) > sht->bysize ? sht->bysize : (vy1 - sht->vy0);
+
+        for (by = by0; by < by1; by++)
+        {
+            vy = sht->vy0 + by;
+            for (bx = bx0; bx < bx1; bx++)
+            {
+                vx = sht->vx0 + bx;
+                if (sht->buf[by * sht->bysize + bx] != sht->col_inv)
+                    shtctl->map[vy * shtctl->xsize + vx] = sid;
+            }
+        }
+    }
+    return;
+}
+
+static void sheet_refreshsub(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1, int h0, int h1)
+{
+    int vx, vy;
+    int h, bx, by;
+    int bx0, by0, bx1, by1; /* sheet内相对坐标 */
+    int xsize, ysize, bxsize, bysize;
+    unsigned char sid;
+    struct SHEET *sht;
+
+    xsize = shtctl->xsize;
+    ysize = shtctl->ysize;
+    vx0 = (vx0 < 0) ? 0 : vx0;
+    vy0 = (vy0 < 0) ? 0 : vy0;
+    vx1 = (vx1 > xsize) ? xsize : vx1;
+    vy1 = (vy1 > ysize) ? ysize : vy1;
+
+    for (h = h0; h <= h1; h++)
+    {
+        sht = shtctl->sheets[h];
+        sid = sht - shtctl->sheets0;
+        bxsize = sht->bxsize;
+        bysize = sht->bysize;
+
+        /* 通过绝对坐标计算相对坐标 */
+        bx0 = (vx0 - sht->vx0) < 0 ? 0 : (vx0 - sht->vx0);
+        by0 = (vy0 - sht->vy0) < 0 ? 0 : (vy0 - sht->vy0);
+        bx1 = (vx1 - sht->vx0) > bxsize ? bxsize : (vx1 - sht->vx0);
+        by1 = (vy1 - sht->vy0) > bysize ? bysize : (vy1 - sht->vy0);
+
+        for (by = by0; by < by1; by++)
+        {
+            vy = sht->vy0 + by;
+            for (bx = bx0; bx < bx1; bx++)
+            {
+                vx = sht->vx0 + bx;
+                if (shtctl->map[vy * xsize + vx] == sid) 
+                    shtctl->vram[vy * xsize + vx] = sht->buf[by * bxsize + bx];
+            }
+        }
+    }
+    return;
+}
+
 /**
  * @brief 将[st, ed]范围的sheet全部上移一层
  *        NOTE: sheets[ed + 1]的元素会被覆盖
@@ -68,7 +155,7 @@ static inline void sheet_up(struct SHTCTL *shtctl, int st, int ed)
         shtctl->sheets[i]->height += 1;
         shtctl->sheets[i + 1] = shtctl->sheets[i];
     }
-
+    return;
 }
 
 /**
@@ -91,19 +178,24 @@ static inline void sheet_down(struct SHTCTL *shtctl, int st, int ed)
         shtctl->sheets[i]->height -= 1;
         shtctl->sheets[i - 1] = shtctl->sheets[i];
     }
+    return;
 }
 
 void sheet_updown(struct SHEET *sht, int height)
 {
-    int h;
     int old = sht->height;
+    int vx0, vy0, vx1, vy1;
     struct SHTCTL *shtctl = sht->shtctl;
 
     /* 如果height过高或过低, 修正之 */
     height = (height > shtctl->top) ? (shtctl->top + 1) : height;
     height = (height < -1) ? -1 : height;
     sht->height = height;
-    
+    vx0 = sht->vx0;
+    vy0 = sht->vy0;
+    vx1 = vx0 + sht->bxsize;
+    vy1 = vy0 + sht->bysize;
+
     if (old == height)
         return;
 
@@ -111,64 +203,28 @@ void sheet_updown(struct SHEET *sht, int height)
     {
         sheet_up(shtctl, height, shtctl->top);
         shtctl->sheets[height] = sht;
+        sheet_refreshmap(shtctl, vx0, vy0, vx1, vy1, height);
+        sheet_refreshsub(shtctl, vx0, vy0, vx1, vy1, height, height);
     }
     else if (height == -1)  /* 隐藏sheet */
     {
         sheet_down(shtctl, height + 1, shtctl->top);
+        sheet_refreshmap(shtctl, vx0, vy0, vx1, vy1, 0);
+        sheet_refreshsub(shtctl, vx0, vy0, vx1, vy1, 0, old - 1);
     }
     else if (old < height)  /* 升高sheet */
     {
         sheet_down(shtctl, old + 1, height);
         shtctl->sheets[height] = sht;
+        sheet_refreshmap(shtctl, vx0, vy0, vx1, vy1, height);
+        sheet_refreshsub(shtctl, vx0, vy0, vx1, vy1, height, height);
     }
     else if (old > height)  /* 降低sheet */
     {
         sheet_up(shtctl, height, old - 1);
         shtctl->sheets[height] = sht;
-    }
-
-    sheet_refresh(sht, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);
-    return;
-}
-
-static void sheet_refreshsub(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1)
-{
-    int h, bx, by, vx, vy;
-    int bx0, by0, bx1, by1; /* sheet内相对坐标 */
-    unsigned char c;
-    struct SHEET *sht;
-
-    for (h = 0; h <= shtctl->top; h++)
-    {
-        sht = shtctl->sheets[h];
-
-        if (vx0 < 0) vx0 = 0;
-        if (vy0 < 0) vy0 = 0;
-        if (vx1 > shtctl->xsize) vx1 = shtctl->xsize;
-        if (vy1 > shtctl->ysize) vy1 = shtctl->ysize;
-
-        /* 通过绝对坐标计算相对坐标 */
-        bx0 = vx0 - sht->vx0;
-        by0 = vy0 - sht->vy0;
-        bx1 = vx1 - sht->vx0;
-        by1 = vy1 - sht->vy0;
-
-        if (bx0 < 0) bx0 = 0;
-        if (by0 < 0) by0 = 0;
-        if (bx1 > sht->bxsize) bx1 = sht->bxsize;
-        if (by1 > sht->bysize) by1 = sht->bysize;
-
-        for (by = by0; by < by1; by++)
-        {
-            vy = sht->vy0 + by;
-            for (bx = bx0; bx < bx1; bx++)
-            {
-                vx = sht->vx0 + bx;
-                c  = sht->buf[by * sht->bxsize + bx];
-                if (c != sht->col_inv) 
-                    shtctl->vram[vy * shtctl->xsize + vx] = c;
-            }
-        }
+        sheet_refreshmap(shtctl, vx0, vy0, vx1, vy1, height + 1);
+        sheet_refreshsub(shtctl, vx0, vy0, vx1, vy1, height + 1, old);
     }
     return;
 }
@@ -177,7 +233,10 @@ void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1)
 {
     struct SHTCTL *shtctl = sht->shtctl;
     if (sht->height >= 0)
-        sheet_refreshsub(shtctl, sht->vx0 + bx0, sht->vy0 + by0, sht->vx0 + bx1, sht->vy0 + by1);
+    {
+        sheet_refreshsub(shtctl, sht->vx0 + bx0, sht->vy0 + by0, \
+                         sht->vx0 + bx1, sht->vy0 + by1, sht->height, sht->height);
+    }
     return;
 }
 
@@ -191,9 +250,14 @@ void sheet_slide(struct SHEET *sht, int vx0, int vy0)
     sht->vy0 = vy0;
     if (sht->height >= 0)
     {
-        sheet_refreshsub(shtctl, oldx, oldy, oldx + sht->bxsize, oldy + sht->bysize);
-        sheet_refreshsub(shtctl, vx0,  vy0,  vx0 + sht->bxsize,  vy0 + sht->bysize);
+        sheet_refreshmap(shtctl, oldx, oldy, oldx + sht->bxsize, oldy + sht->bysize, 0);
+        sheet_refreshmap(shtctl, vx0, vy0, vx0 + sht->bxsize, vy0 + sht->bysize, sht->height);
+        sheet_refreshsub(shtctl, oldx, oldy, \
+                         oldx + sht->bxsize, oldy + sht->bysize, 0, sht->height);
+        sheet_refreshsub(shtctl, vx0,  vy0, \
+                         vx0 + sht->bxsize,  vy0 + sht->bysize,  sht->height, sht->height);
     }
+
     return;
 }
 

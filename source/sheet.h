@@ -19,9 +19,9 @@ struct SHEET
 
 struct SHTCTL
 {
-    unsigned char *vram; /* 显存初始地址             */
-    int xsize, ysize;    /* 显存长宽                */
-    int top;             /* 当前最高sheet的height值  */
+    unsigned char *vram, *map;  /* 显存初始地址和像素点所属sheet地图 */
+    int xsize, ysize;           /* 显存长宽                       */
+    int top;                    /* 当前最高sheet的height值        */
     struct SHEET *sheets[MAX_SHEETS];
     struct SHEET sheets0[MAX_SHEETS];
 };

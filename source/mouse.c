@@ -1,6 +1,12 @@
 #include "mouse.h"
 #include "int.h"
+#include "fifo.h"
 #include "debug.h"
+#include "graphic.h"
+#include "naskfunc.h"
+#include "keyboard.h"
+
+struct FIFO8 mousefifo;
 
 void enable_mouse(struct MOUSE_DEC *mdec)
 {
@@ -106,4 +112,13 @@ void init_mouse_cursor8(char *mouse, char bc)
             }
         }
     }
+}
+
+/* 来自鼠标PS/2的中断 */
+void inthandler2c(int *esp)
+{
+    io_out8(PIC1_OCW2, 0x64);
+    io_out8(PIC0_OCW2, 0x62);
+    fifo8_put(&mousefifo, io_in8(PORT_KEYDAT));
+    return;
 }
