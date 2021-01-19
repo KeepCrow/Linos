@@ -6,7 +6,7 @@
 #define PIT_CTRL    0x43
 #define PIT_CNT0    0x40
 #define FREQ_100HZ  0x2e9c
-#define MAX_TIMER   500
+#define MAX_TIMER   0xff
 
 struct TIMER
 {
