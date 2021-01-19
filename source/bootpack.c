@@ -23,27 +23,43 @@ extern struct TIMERCTL timerctl;
 void HariMain(void)
 {
     // char logo[16];
-    char msg[32];
-    char bufmouse[256];
-    char keyfifo_buf[32];
-    char mousefifo_buf[128];
+    char msg[32], bufmouse[256];
+    char keyfifo_buf[32], mousefifo_buf[128];
+    char timer0fifo_buf[8], timer1fifo_buf[8], timer2fifo_buf[8];
     // int logox, logoy;
     int mem_total, mx, my, count = 0;
     // int psize = 5;
-    // int data;
+    int data;
     struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
     struct MEMMAN *man = (struct MEMMAN *)MEMMAN_ADR;
     struct MOUSE_DEC mdec;
     struct SHTCTL *shtctl;
     struct SHEET *shtback, *shtmouse, *shtwin;
+    struct FIFO8 timer0fifo, timer1fifo, timer2fifo;
+    struct TIMER *timer0, *timer1, *timer2;
     unsigned char *bufback, *bufwin;
 
     init_gdtidt();  /* 初始化gdt与idt */
     init_pic(); /* 初始化pic */
     io_sti();
+    
     fifo8_init(&keyfifo, keyfifo_buf, 32);
     fifo8_init(&mousefifo, mousefifo_buf, 128);
+    fifo8_init(&timer0fifo, timer0fifo_buf, 8);
+    fifo8_init(&timer1fifo, timer1fifo_buf, 8);
+    fifo8_init(&timer2fifo, timer2fifo_buf, 8);
+
     init_pit();
+    timer0 = timer_alloc();
+    timer_init(timer0, &timer0fifo, 1);
+    timer_settime(timer0, 500);
+    timer1 = timer_alloc();
+    timer_init(timer1, &timer1fifo, 1);
+    timer_settime(timer1, 100);
+    timer2 = timer_alloc();
+    timer_init(timer2, &timer2fifo, 1);
+    timer_settime(timer2, 50);
+
     io_out8(PIC0_IMR, 0xf8);    /* 11111000 */
     io_out8(PIC1_IMR, 0xef);    /* 11101111 */
     init_palette(); /* 设置调色板 */
@@ -101,7 +117,32 @@ void HariMain(void)
         sheet_refresh(shtwin, 4, 28, 160, 44);
 
         io_cli();
-        if (fifo8_status(&keyfifo) != 0)
+        if (fifo8_status(&timer0fifo) != 0)
+        {
+            data = fifo8_get(&timer0fifo);
+            io_sti();
+            sprintf(msg, "%d", data);
+            show_line8(shtback, (enum LineNum)3, "5[sec]");
+        }
+        else if (fifo8_status(&timer1fifo) != 0)
+        {
+            data = fifo8_get(&timer1fifo);
+            io_sti();
+            sprintf(msg, "%d", data);
+            show_line8(shtback, (enum LineNum)4, "1[sec]");
+        }
+        else if (fifo8_status(&timer2fifo) != 0)
+        {
+            data = fifo8_get(&timer2fifo);
+            io_sti();
+            if (data == 1)
+                show_line8(shtback, (enum LineNum)5, "I");
+            else
+                show_line8(shtback, (enum LineNum)5, " ");
+            timer_settime(timer2, 50);
+            timer_init(timer2, &timer2fifo, !data);
+        }
+        else if (fifo8_status(&keyfifo) != 0)
         {
             /* 输出字符 */
             io_sti();
@@ -136,6 +177,6 @@ void HariMain(void)
                 sheet_slide(shtmouse, mx, my);
             }
         }
-        io_stihlt();
+        io_sti();
     }
 }
