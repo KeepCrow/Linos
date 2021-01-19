@@ -1,6 +1,7 @@
 #include "keyboard.h"
 #include "int.h"
 #include "fifo.h"
+#include "naskfunc.h"
 
 struct FIFO8 keyfifo;
 

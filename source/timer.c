@@ -7,6 +7,7 @@
 #define TIMER_FLAGS_USING   2
 
 struct TIMERCTL timerctl;
+struct FIFO8 timerfifo;
 
 void init_pit(void)
 {
@@ -75,7 +76,6 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
 void inthandler20(int *esp)
 {
     int i, j;
-    struct TIMER *timer;
 
     io_out8(PIC0_OCW2, 0x60);
     

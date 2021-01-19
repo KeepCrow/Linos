@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "naskfunc.h"
 
 #define EFLAGS_AC_BIT       0x00040000
 #define CR0_CACHE_DISABLE   0x60000000
@@ -172,7 +173,7 @@ static char is486(void)
     io_store_eflags(eflg);
 
     eflg = io_load_eflags();
-    flg486 = (eflg & EFLAGS_AC_BIT != 0) ? 1 : 0;
+    flg486 = ((eflg & EFLAGS_AC_BIT) != 0) ? 1 : 0;
 
     /* 恢复原本的eflags寄存器值 */
     eflg &= ~EFLAGS_AC_BIT;
