@@ -23,7 +23,6 @@
 #define INVI_COLOR      99
 
 #define LINE_SPAN       20  /* 行高 */
-#define MAX_LINE        10
 #define FONT_WIDTH      8   /* 字符宽 */ 
 #define FONT_HEIGHT     16  /* 字符高 */
 #define FONT_MARGIN_Y   ((LINE_SPAN - FONT_HEIGHT) / 2)
@@ -42,6 +41,7 @@ void init_screen8(char *buf, int xsize, int ysize);
 void putblock8_8(char *buf, int vxsize, int pxsize, int pysize, int px0, int py0, char *block_buf, int bxsize);
 void putfonts8_asc(char *buf, int xsize, int x, int y, char c, unsigned char *s);
 void show_logo8(char *buf, int xsize, int x, int y, char c, char bc, unsigned char *logo, int psize);
-void show_line8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg);
+void line_show8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg);
+void line_input8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg);
 
 #endif

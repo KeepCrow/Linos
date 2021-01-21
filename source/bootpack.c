@@ -21,10 +21,19 @@
 // #define bootpack_debug
 extern struct TIMERCTL timerctl;
 
+static char keytable[0x54] = {
+     0,   0,  '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^',  0,   0,
+    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[',  0,   0,  'A', 'S',
+    'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', ':',  0,   0,  ']', 'Z', 'X', 'C', 'V',
+    'B', 'N', 'M', ',', '.', '/',  0,  '*',  0,  ' ',  0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,  '7', '8', '9', '-', '4', '5', '6', '+', '1',
+    '2', '3', '0', '.'
+};
+
 /* 暂时无法修改为LinMain() */
 void HariMain(void)
 {
-    char msg[32], bufmouse[256];
+    unsigned char msg[32], bufmouse[256];
     int mem_total, mx, my;
     int data;
     int fifobuf[128];
@@ -70,6 +79,7 @@ void HariMain(void)
     bufwin  = (unsigned char *)memman_alloc4k(man, 160 * 52);
     init_screen8(bufback, binfo->scrnx, binfo->scrny);
     make_window8(bufwin, 160, 52, "Window");
+
     init_mouse_cursor8(bufmouse, INVI_COLOR);
 
     shtctl = shtctl_init(man, binfo->vram, binfo->scrnx, binfo->scrny);
@@ -92,16 +102,11 @@ void HariMain(void)
 
     /* 内存显示 */
     sprintf(msg, "memory %dMB free: %dKB", mem_total >> 20, memman_total(man) >> 10);
-    show_line8(shtback, LN_MEM, msg);
+    line_show8(shtback, LN_MEM, msg);
     sheet_refresh(shtback, 0, 0, binfo->scrnx, binfo->scrny);
 
     while (1)
     {
-        sprintf(msg, "count:%09d", timerctl.count);
-        boxfill8(bufwin, 160, BRIGHT_GRAY, 4, 28, 160 - 6, 16);
-        putfonts8_asc(bufwin, 160, 4, 28, WHITE, msg);
-        sheet_refresh(shtwin, 4, 28, 160, 44);
-
         io_cli();
         if (fifo32_status(&fifo) == 0)
         {
@@ -115,7 +120,13 @@ void HariMain(void)
         if (data >= FIFOVAL_KEY_BASE && data <= FIFOVAL_KEY_MAX) /* 键盘数据 */
         {
             sprintf(msg, "keyboard input: %02X", data - FIFOVAL_KEY_BASE);
-            show_line8(shtback, LN_KEYBOARD, msg);
+            line_show8(shtback, LN_KEYBOARD, msg);
+            if (data < FIFOVAL_KEY_BASE + 0x54)
+            {
+                msg[0] = keytable[data - FIFOVAL_KEY_BASE];
+                msg[1] = 0;
+                line_input8(shtwin, (enum LineNum)1, msg);
+            }
         }
         else if ((data >= FIFOVAL_MOUSE_BASE) && (data <= FIFOVAL_MOUSE_MAX))   /* 鼠标数据 */
         {
@@ -136,27 +147,27 @@ void HariMain(void)
                     msg[17] = 'R';
                 else if ((mdec.btn & 0x04) != 0)
                     msg[16] = 'C';
-                show_line8(shtback, LN_MOUSE, msg);
+                line_show8(shtback, LN_MOUSE, msg);
                 sheet_slide(shtmouse, mx, my);
             }
         }
         else if (data == FIFOVAL_3SECOND)
         {
-            show_line8(shtback, (enum LineNum)3, "3[sec]");
+            line_show8(shtback, (enum LineNum)3, "3[sec]");
         }
         else if (data == FIFOVAL_5SECOND)
         {
-            show_line8(shtback, (enum LineNum)3, "5[sec]");
+            line_show8(shtback, (enum LineNum)3, "5[sec]");
         }
         else if (data == FIFOVAL_SHINING0)
         {
-            show_line8(shtback, (enum LineNum)4, " ");
+            line_show8(shtback, (enum LineNum)4, " ");
             timer_init(timer2, &fifo, FIFOVAL_SHINING1);
             timer_settime(timer2, 50);
         }
         else if (data == FIFOVAL_SHINING1)
         {
-            show_line8(shtback, (enum LineNum)4, "I");
+            line_show8(shtback, (enum LineNum)4, "I");
             timer_init(timer2, &fifo, FIFOVAL_SHINING0);
             timer_settime(timer2, 50);
         }

@@ -190,7 +190,7 @@ void show_logo8(char *buf, int xsize, int x, int y, char c, char bc, unsigned ch
     return;
 }
 
-void show_line8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
+void line_show8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
 {
     int xsize = sht->bxsize;
     int y = line_num * LINE_SPAN;
@@ -199,6 +199,18 @@ void show_line8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
     putfonts8_asc(sht->buf, xsize, 1, y + FONT_MARGIN_Y, WHITE, msg);
     sheet_refresh(sht, 1, y + FONT_MARGIN_Y, xsize, y + LINE_SPAN);
     return;
+}
+
+static int cursor_col = 0, input_line = 0;
+void line_input8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
+{
+    int x, y;
+    x = cursor_col * FONT_WIDTH + 1;
+    y = line_num * LINE_SPAN;
+
+    putfonts8_asc(sht->buf, sht->bxsize, x, y, WHITE, msg);
+    sheet_refresh(sht, x, y, x + FONT_WIDTH, y + LINE_SPAN);
+    cursor_col += 1;
 }
 
 /**
