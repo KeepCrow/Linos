@@ -2,6 +2,8 @@
 #include "naskfunc.h"
 #include "graphic.h"
 
+#define TASK_HEIGHT     28
+
 void set_palette(int start, int end, unsigned char *rgb)
 {
     int i, eflags;
@@ -52,24 +54,47 @@ void init_palette(void)
  *
  * @param      vram   显存首地址
  * @param[in]  xsize  屏幕水平像素数量
- * @param[in]  c      待使用的颜色
  * @param[in]  x0     色块左上角水平座标
  * @param[in]  y0     色块左上角垂直座标
  * @param[in]  xlen   色块水平长
  * @param[in]  ylen   色块垂直长
+ * @param[in]  lc     线条颜色
+ * @param[in]  bc     填充颜色
  */
-void boxfill8(char *buf, int xsize, unsigned char c, int x0, int y0, int xlen, int ylen)
+void boxfill8(char *buf, int xsize, int x0, int y0, int xlen, int ylen, char lc, char bc)
 {
     int x, y;
     for (y = y0; y < y0 + ylen; y++)
     {
         for (x = x0; x < x0 + xlen; x++)
         {
-            buf[y * xsize + x] = c;
+            if (x == x0 || y == y0 || x == x0 + xlen - 1 || y == y0 + ylen - 1)
+                buf[y * xsize + x] = lc;
+            else
+                buf[y * xsize + x] = bc;
         }
     }
     return;
 }
+
+// /**
+//  * @brief      将一个左上角地址为(x0, y0)，长宽分别为xlen和ylen的矩形用颜色为c的线圈出来
+//  *
+//  * @param      vram   显存首地址
+//  * @param[in]  xsize  屏幕水平像素数量
+//  * @param[in]  c      线使用的颜色
+//  * @param[in]  x0     色块左上角水平座标
+//  * @param[in]  y0     色块左上角垂直座标
+//  * @param[in]  xlen   色块水平长
+//  * @param[in]  ylen   色块垂直长
+//  */
+// void boxhollow8(char *buf, int xsize, unsigned char c, int x0, int y0, int xlen, int ylen)
+// {
+//     boxfill8(buf, xsize, c, x0,        y0,            xlen, 1);
+//     boxfill8(buf, xsize, c, x0,        y0,            1,    ylen);
+//     boxfill8(buf, xsize, c, x0,        y0 + ylen - 1, xlen, 1);
+//     boxfill8(buf, xsize, c, x0 + xlen, y0,    1,      ylen);
+// }
 
 void putfont8(char *buf, int xsize, int x, int y, char c, char *font)
 {
@@ -143,9 +168,9 @@ void putblock8_8(char *buf, int vxsize, int pxsize, int pysize, int px0, int py0
 
 void putpixle8(char *buf, int xsize, int x, int y, char c, char bc, int pixle_size)
 {
-    boxfill8(buf, xsize, bc, x,     y,     pixle_size,     1);
-    boxfill8(buf, xsize, bc, x,     y + 1, 1,              pixle_size);
-    boxfill8(buf, xsize, c,    x + 1, y + 1, pixle_size - 1, pixle_size - 1);
+    boxfill8(buf, xsize, x,     y,     pixle_size,     1,              bc, bc);
+    boxfill8(buf, xsize, x,     y + 1, 1,              pixle_size,     bc, bc);
+    boxfill8(buf, xsize, x + 1, y + 1, pixle_size - 1, pixle_size - 1, c,  c);
 }
 
 void putfont8_giant(char *buf, int xsize, int x, int y, char c, char bc, char *font, int psize)
@@ -195,7 +220,7 @@ void line_show8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
     int xsize = sht->bxsize;
     int y = line_num * LINE_SPAN;
 
-    boxfill8(sht->buf, xsize, BACK_COLOR, 0, y, xsize, LINE_SPAN);
+    boxfill8(sht->buf, xsize, 0, y, xsize, LINE_SPAN, BACK_COLOR, BACK_COLOR);
     putfonts8_asc(sht->buf, xsize, 1, y + FONT_MARGIN_Y, WHITE, msg);
     sheet_refresh(sht, 1, y + FONT_MARGIN_Y, xsize, y + LINE_SPAN);
     return;
@@ -204,13 +229,20 @@ void line_show8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
 static int cursor_col = 0, input_line = 0;
 void line_input8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
 {
-    int x, y;
+    int x, y, max_col;
+    max_col = sht->bxsize / FONT_WIDTH - 1;
     x = cursor_col * FONT_WIDTH + 1;
-    y = line_num * LINE_SPAN;
+    y = ((input_line > line_num) ? input_line : line_num) * LINE_SPAN;
 
     putfonts8_asc(sht->buf, sht->bxsize, x, y, WHITE, msg);
     sheet_refresh(sht, x, y, x + FONT_WIDTH, y + LINE_SPAN);
+    
     cursor_col += 1;
+    if (cursor_col >= max_col)
+    {
+        cursor_col = 0;
+        input_line += 1;
+    }
 }
 
 /**
@@ -222,22 +254,9 @@ void line_input8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
  */
 void init_screen8(char *buf, int xsize, int ysize)
 {
-    boxfill8(buf, xsize, BACK_COLOR, 0, 0, xsize, ysize - 28);
-    boxfill8(buf, xsize, BRIGHT_GRAY, 0, ysize - 28, xsize, 1);
-    boxfill8(buf, xsize, WHITE, 0, ysize - 27, xsize, 1);
-    boxfill8(buf, xsize, BRIGHT_GRAY, 0, ysize - 26, xsize, 26);
-
-    boxfill8(buf, xsize, WHITE, 3, ysize - 24, 57, 1);
-    boxfill8(buf, xsize, WHITE, 2, ysize - 24, 1, 21);
-    boxfill8(buf, xsize, DARK_GRAY, 3, ysize - 4, 57, 1);
-    boxfill8(buf, xsize, DARK_GRAY, 59, ysize - 23, 1, 19);
-    boxfill8(buf, xsize, BLACK, 2, ysize - 3, 58, 1);
-    boxfill8(buf, xsize, BLACK, 60, ysize - 24, 1, 22);
-
-    boxfill8(buf, xsize, DARK_GRAY, xsize - 47, ysize - 24, 44, 1);
-    boxfill8(buf, xsize, DARK_GRAY, xsize - 47, ysize - 23, 1, 20);
-    boxfill8(buf, xsize, WHITE, xsize - 47, ysize - 3, 44, 1);
-    boxfill8(buf, xsize, WHITE, xsize - 3, ysize - 24, 1, 22);
-
+    boxfill8(buf, xsize, 0, 0, xsize, ysize - TASK_HEIGHT, BACK_COLOR, BACK_COLOR);
+    boxfill8(buf, xsize, 0, ysize - TASK_HEIGHT, xsize, TASK_HEIGHT, BRIGHT_GRAY, BRIGHT_GRAY);
+    boxfill8(buf, xsize, 0, ysize - TASK_HEIGHT, xsize, 1, WHITE, WHITE);
+    boxfill8(buf, xsize, 0, ysize - TASK_HEIGHT, 57, TASK_HEIGHT, WHITE, BRIGHT_GRAY);
     return;
 }

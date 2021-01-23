@@ -36,7 +36,8 @@ enum LineNum
 };
 
 void init_palette(void);
-void boxfill8(char *buf, int xsize, unsigned char c, int x0, int y0, int xlen, int ylen);
+void boxfill8(char *buf, int xsize, int x0, int y0, int xlen, int ylen, char lc, char bc);
+void boxhollow8(char *buf, int xsize, unsigned char c, int x0, int y0, int xlen, int ylen);
 void init_screen8(char *buf, int xsize, int ysize); 
 void putblock8_8(char *buf, int vxsize, int pxsize, int pysize, int px0, int py0, char *block_buf, int bxsize);
 void putfonts8_asc(char *buf, int xsize, int x, int y, char c, unsigned char *s);

@@ -19,7 +19,7 @@ VRAM    EQU     0xff8       ; 存储图像缓冲区地址的地址
 
         ; MOV     AL, 0x13    ; VGA显卡, 320x200x8位彩色
         ; MOV     AH, 0x00
-        MOV     BX, 0x4103  ; VBE的 640x480x8bit彩色
+        MOV     BX, 0x4101  ; VBE的 640x480x8bit彩色
                             ; 101------640x480   102------800x600
                             ; 105------1024x768  107------1280x1024
         MOV     AX, 0x4f02
@@ -30,8 +30,8 @@ VRAM    EQU     0xff8       ; 存储图像缓冲区地址的地址
         ; MOV     WORD [SCRNX], 320
         ; MOV     WORD [SCRNY], 200
         ; MOV     DWORD [VRAM], 0x000a0000    ; VRAM是0xa0000 - 0xaffff的64KB
-        MOV     WORD [SCRNX], 800
-        MOV     WORD [SCRNY], 600
+        MOV     WORD [SCRNX], 640
+        MOV     WORD [SCRNY], 480
         MOV     DWORD [VRAM], 0xe0000000
 
 ; 利用BIOS取得键盘上各种LED指示灯的状态

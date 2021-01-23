@@ -1,36 +1,31 @@
 #include "window.h"
+#include "graphic.h"
+
+#define TITLE_HEIGHT 20
 
 void make_window8(unsigned char *buf, int xsize, int ysize, char *title)
 {
     char c;
     int x, y;
     static char closebtn[14][16] = {
-        "OOOOOOOOOOOOOOO@",
-        "OQQQQQQQQQQQQQ$@",
-        "OQQQQQQQQQQQQQ$@",
-        "OQQQ**QQQQ**QQ$@",
-        "OQQQQ**QQ**QQQ$@",
-        "OQQQQQ****QQQQ$@",
-        "OQQQQQQ**QQQQQ$@",
-        "OQQQQQ****QQQQ$@",
-        "OQQQQ**QQ**QQQ$@",
-        "OQQQ**QQQQ**QQ$@",
-        "OQQQQQQQQQQQQQ$@",
-        "OQQQQQQQQQQQQQ$@",
-        "O$$$$$$$$$$$$$$@",
+        "@@@@@@@@@@@@@@@@",
+        "@QQQQQQQQQQQQQQ@",
+        "@QQ**QQQQQQ**QQ@",
+        "@QQQ**QQQQ**QQQ@",
+        "@QQQQ**QQ**QQQQ@",
+        "@QQQQQ****QQQQQ@",
+        "@QQQQQQ**QQQQQQ@",
+        "@QQQQQ****QQQQQ@",
+        "@QQQQ**QQ**QQQQ@",
+        "@QQQ**QQQQ**QQQ@",
+        "@QQ**QQQQQQ**QQ@",
+        "@QQQQQQQQQQQQQQ@",
+        "@QQQQQQQQQQQQQQ@",
         "@@@@@@@@@@@@@@@@"
     };
 
-    boxfill8(buf, xsize, BRIGHT_GRAY, 0,         0,         xsize,     1        );
-    boxfill8(buf, xsize, WHITE,       1,         1,         xsize - 1, 1        );
-    boxfill8(buf, xsize, BRIGHT_GRAY, 0,         0,         1,         ysize    );
-    boxfill8(buf, xsize, WHITE,       1,         1,         1,         ysize - 1);
-    boxfill8(buf, xsize, DARK_GRAY,   1,         ysize - 2, xsize - 2, 1        );
-    boxfill8(buf, xsize, BLACK,       0,         ysize - 1, xsize,     1        );
-    boxfill8(buf, xsize, DARK_GRAY,   xsize - 2, 1,         1,         ysize - 2);
-    boxfill8(buf, xsize, BLACK,       xsize - 1, 0,         1,         ysize    );
-    boxfill8(buf, xsize, BRIGHT_GRAY, 2,         2,         xsize - 4, ysize - 4);
-    boxfill8(buf, xsize, DARK_BLUE,   3,         3,         xsize - 6, 17       );
+    boxfill8(buf, xsize, 0, 0, xsize, ysize, WHITE, BRIGHT_GRAY);
+    boxfill8(buf, xsize, 1, 1, xsize - 2, TITLE_HEIGHT, DARK_BLUE, DARK_BLUE);
     putfonts8_asc(buf, xsize, 24, 4, WHITE, title);
 
     for (y = 0; y < 14; y++)
@@ -40,9 +35,6 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title)
             switch (closebtn[y][x])
             {
             case '@':
-                c = BLACK;
-                break;
-            case '$':
                 c = DARK_GRAY;
                 break;
             case 'Q':
@@ -55,7 +47,7 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title)
                 c = WHITE;
                 break;
             }
-            buf[(5 + y) * xsize + (xsize - 21 + x)] = c;
+            buf[(4 + y) * xsize + (xsize - 21 + x)] = c;
         }
     }
     return;
