@@ -1,32 +1,45 @@
 #include "window.h"
 #include "graphic.h"
 
-#define TITLE_HEIGHT 20
+void init_window8(struct WINDOW *win, unsigned char *buf, char *title, int xsize, int ysize, unsigned char tc, unsigned bc)
+{
+    win->buf   = buf;
+    win->title = title;
+    win->xsize = xsize;
+    win->ysize = ysize;
+    win->title_color = tc;
+    win->body_color  = bc;
+}
 
-void make_window8(unsigned char *buf, int xsize, int ysize, char *title)
+void make_window8(struct WINDOW *win)
 {
     char c;
     int x, y;
-    static char closebtn[14][16] = {
-        "@@@@@@@@@@@@@@@@",
-        "@QQQQQQQQQQQQQQ@",
-        "@QQ**QQQQQQ**QQ@",
-        "@QQQ**QQQQ**QQQ@",
-        "@QQQQ**QQ**QQQQ@",
-        "@QQQQQ****QQQQQ@",
-        "@QQQQQQ**QQQQQQ@",
-        "@QQQQQ****QQQQQ@",
-        "@QQQQ**QQ**QQQQ@",
-        "@QQQ**QQQQ**QQQ@",
-        "@QQ**QQQQQQ**QQ@",
-        "@QQQQQQQQQQQQQQ@",
-        "@QQQQQQQQQQQQQQ@",
-        "@@@@@@@@@@@@@@@@"
+    unsigned char *buf = win->buf;
+    int xsize = win->xsize, ysize = win->ysize;
+
+    static char closebtn[15][16] = {
+        "QQQQQQQQQQQQQQQQ",
+        "QQQQQQQQQQQQQQQQ",
+        "QQ**QQQQQQQQ**QQ",
+        "QQQ**QQQQQQ**QQQ",
+        "QQQQ**QQQQ**QQQQ",
+        "QQQQQ**QQ**QQQQQ",
+        "QQQQQQ****QQQQQQ",
+        "QQQQQQQ**QQQQQQQ",
+        "QQQQQQ****QQQQQQ",
+        "QQQQQ**QQ**QQQQQ",
+        "QQQQ**QQQQ**QQQQ",
+        "QQQ**QQQQQQ**QQQ",
+        "QQ**QQQQQQQQ**QQ",
+        "QQQQQQQQQQQQQQQQ"
+        "QQQQQQQQQQQQQQQQ",
     };
 
-    boxfill8(buf, xsize, 0, 0, xsize, ysize, WHITE, BRIGHT_GRAY);
-    boxfill8(buf, xsize, 1, 1, xsize - 2, TITLE_HEIGHT, DARK_BLUE, DARK_BLUE);
-    putfonts8_asc(buf, xsize, 24, 4, WHITE, title);
+    boxfill8(buf, xsize, 0, 0, xsize, ysize, WHITE, win->body_color);
+    boxfill8(buf, xsize, 1, 1, xsize - 2, TITLE_HEIGHT, win->title_color, win->title_color);
+    boxfill8(buf, xsize, 1, TITLE_HEIGHT + 2, xsize - 2, ysize - TITLE_HEIGHT - 3, DARK_GRAY, WHITE);
+    putfonts8_asc(buf, xsize, 4, 4, WHITE, win->title);
 
     for (y = 0; y < 14; y++)
     {
@@ -34,16 +47,10 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title)
         {
             switch (closebtn[y][x])
             {
-            case '@':
-                c = DARK_GRAY;
-                break;
             case 'Q':
-                c = BRIGHT_GRAY;
+                c = win->title_color;
                 break;
             case '*':
-                c = DARK_RED;
-                break;
-            default:
                 c = WHITE;
                 break;
             }

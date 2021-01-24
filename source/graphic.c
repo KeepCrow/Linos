@@ -2,7 +2,7 @@
 #include "naskfunc.h"
 #include "graphic.h"
 
-#define TASK_HEIGHT     28
+#define TASK_HEIGHT     20
 
 void set_palette(int start, int end, unsigned char *rgb)
 {
@@ -76,25 +76,6 @@ void boxfill8(char *buf, int xsize, int x0, int y0, int xlen, int ylen, char lc,
     }
     return;
 }
-
-// /**
-//  * @brief      将一个左上角地址为(x0, y0)，长宽分别为xlen和ylen的矩形用颜色为c的线圈出来
-//  *
-//  * @param      vram   显存首地址
-//  * @param[in]  xsize  屏幕水平像素数量
-//  * @param[in]  c      线使用的颜色
-//  * @param[in]  x0     色块左上角水平座标
-//  * @param[in]  y0     色块左上角垂直座标
-//  * @param[in]  xlen   色块水平长
-//  * @param[in]  ylen   色块垂直长
-//  */
-// void boxhollow8(char *buf, int xsize, unsigned char c, int x0, int y0, int xlen, int ylen)
-// {
-//     boxfill8(buf, xsize, c, x0,        y0,            xlen, 1);
-//     boxfill8(buf, xsize, c, x0,        y0,            1,    ylen);
-//     boxfill8(buf, xsize, c, x0,        y0 + ylen - 1, xlen, 1);
-//     boxfill8(buf, xsize, c, x0 + xlen, y0,    1,      ylen);
-// }
 
 void putfont8(char *buf, int xsize, int x, int y, char c, char *font)
 {

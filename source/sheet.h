@@ -30,7 +30,7 @@ struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize
 struct SHEET *sheet_alloc(struct SHTCTL *shtctl);
 void sheet_setbuf(struct SHEET *sheet, unsigned char *buf, int xsize, int ysize, int col_inv);
 void sheet_updown(struct SHEET *sheet, int height);
-void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1);
+void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bxlen, int bylen);
 void sheet_slide(struct SHEET *sheet, int x0, int y0);
 void sheet_free(struct SHEET *sheet);
 

@@ -30,11 +30,24 @@ static char keytable[0x54] = {
     '2', '3', '0', '.'
 };
 
+/**
+ * @param bc 更新位置的背景色
+ * @param mc 更新位置字体颜色
+ */
+static inline void update_msg(struct SHEET *sht, char *msg, int x0, int y0, int xl, int yl, char bc, char mc)
+{
+    boxfill8(sht->buf, sht->bxsize, x0, y0, xl, yl, bc, bc);
+    putfonts8_asc(sht->buf, sht->bxsize, x0, y0, mc, msg);
+    sheet_refresh(sht, x0, y0, xl, yl);
+}
+
 /* 暂时无法修改为LinMain() */
 void HariMain(void)
 {
+    char cursor[2] = {0xdd, 0};
     unsigned char msg[32], bufmouse[256];
-    int mem_total, mx, my;
+    unsigned char *bufback, *bufwin;
+    int mem_total, mx, my, cursori = 0;
     int data;
     int fifobuf[128];
     struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
@@ -44,7 +57,7 @@ void HariMain(void)
     struct SHEET *shtback, *shtmouse, *shtwin;
     struct TIMER *timer0, *timer1, *timer2;
     struct FIFO32 fifo;
-    unsigned char *bufback, *bufwin;
+    struct WINDOW win1;
 
     init_gdtidt();  /* 初始化gdt与idt */
     init_pic(); /* 初始化pic */
@@ -78,7 +91,8 @@ void HariMain(void)
     bufback = (unsigned char *)memman_alloc4k(man, binfo->scrnx * binfo->scrny);
     bufwin  = (unsigned char *)memman_alloc4k(man, 160 * 52);
     init_screen8(bufback, binfo->scrnx, binfo->scrny);
-    make_window8(bufwin, 160, 52, "Window");
+    init_window8(&win1, bufwin, "window", 160, 52, DARK_BLUE, BRIGHT_GRAY);
+    make_window8(&win1);
 
     init_mouse_cursor8(bufmouse, INVI_COLOR);
 
@@ -125,7 +139,10 @@ void HariMain(void)
             {
                 msg[0] = keytable[data - FIFOVAL_KEY_BASE];
                 msg[1] = 0;
-                line_input8(shtwin, (enum LineNum)1, msg);
+                update_msg(shtwin, msg, cursori * FONT_WIDTH + 2, TITLE_HEIGHT + 3, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
+                cursori += 1;
+                if (cursori >= shtwin->bxsize / FONT_WIDTH - 1)
+                    cursori = 0;
             }
         }
         else if ((data >= FIFOVAL_MOUSE_BASE) && (data <= FIFOVAL_MOUSE_MAX))   /* 鼠标数据 */
@@ -149,6 +166,10 @@ void HariMain(void)
                     msg[16] = 'C';
                 line_show8(shtback, LN_MOUSE, msg);
                 sheet_slide(shtmouse, mx, my);
+
+                /* 移动窗口 */
+                if ((mdec.btn & 0x01) != 0)
+                    sheet_slide(shtwin, mx - 80, my - 8);
             }
         }
         else if (data == FIFOVAL_3SECOND)
@@ -161,13 +182,13 @@ void HariMain(void)
         }
         else if (data == FIFOVAL_SHINING0)
         {
-            line_show8(shtback, (enum LineNum)4, " ");
+            update_msg(shtwin, " ", cursori * FONT_WIDTH + 2, TITLE_HEIGHT + 3, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
             timer_init(timer2, &fifo, FIFOVAL_SHINING1);
             timer_settime(timer2, 50);
         }
         else if (data == FIFOVAL_SHINING1)
         {
-            line_show8(shtback, (enum LineNum)4, "I");
+            update_msg(shtwin, cursor, cursori * FONT_WIDTH + 2, TITLE_HEIGHT + 3, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
             timer_init(timer2, &fifo, FIFOVAL_SHINING0);
             timer_settime(timer2, 50);
         }
