@@ -32,6 +32,8 @@ static char keytable[0x54] = {
     '2', '3', '0', '.'
 };
 
+void task_b_main();
+
 /**
  * @param bc 更新位置的背景色
  * @param mc 更新位置字体颜色
@@ -52,6 +54,7 @@ void HariMain(void)
     int mem_total, mx, my, cursori = 0;
     int data;
     int fifobuf[128];
+    int task_b_esp;
     struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
     struct MEMMAN *man = (struct MEMMAN *)MEMMAN_ADR;
     struct MOUSE_DEC mdec;
@@ -126,6 +129,24 @@ void HariMain(void)
     set_segmdesc(gdt + 3, 103, (int) &tss_a, AR_TSS32);
     tss_init(&tss_b);
     set_segmdesc(gdt + 4, 103, (int) &tss_b, AR_TSS32);
+    task_b_esp = memman_alloc4k(man, 64 * 1024) +64 * 1024;
+    tss_b.eip = (int) &task_b_main;
+    tss_b.eflags = 0x00000202;  /* IF = 1 */
+    tss_b.eax = 0;
+    tss_b.ecx = 0;
+    tss_b.edx = 0;
+    tss_b.ebx = 0;
+    tss_b.esp = task_b_esp;
+    tss_b.ebp = 0;
+    tss_b.esi = 0;
+    tss_b.edi = 0;
+    tss_b.es = 1 * 8;
+    tss_b.cs = 2 * 8;
+    tss_b.ss = 1 * 8;
+    tss_b.ds = 1 * 8;
+    tss_b.fs = 1 * 8;
+    tss_b.gs = 1 * 8;
+
 
     while (1)
     {
@@ -187,6 +208,7 @@ void HariMain(void)
         else if (data == FIFOVAL_5SECOND)
         {
             line_show8(shtback, (enum LineNum)3, "5[sec]");
+            taskswitch4();
         }
         else if (data == FIFOVAL_SHINING0)
         {
@@ -200,5 +222,13 @@ void HariMain(void)
             timer_init(timer2, &fifo, FIFOVAL_SHINING0);
             timer_settime(timer2, 50);
         }
+    }
+}
+
+void task_b_main()
+{
+    while (1)
+    {
+        io_hlt();
     }
 }
