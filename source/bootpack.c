@@ -12,6 +12,7 @@
 #include "sheet.h"
 #include "window.h"
 #include "timer.h"
+#include "task.h"
 
 #define FIFOVAL_5SECOND     5
 #define FIFOVAL_3SECOND     3
@@ -20,6 +21,7 @@
 
 // #define bootpack_debug
 extern struct TIMERCTL timerctl;
+extern struct TSS32 tss_a, tss_b;
 
 static char keytable[0x54] = {
      0,   0,  '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^',  0,   0,
@@ -58,6 +60,7 @@ void HariMain(void)
     struct TIMER *timer0, *timer1, *timer2;
     struct FIFO32 fifo;
     struct WINDOW win1;
+    struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 
     init_gdtidt();  /* 初始化gdt与idt */
     init_pic(); /* 初始化pic */
@@ -118,6 +121,11 @@ void HariMain(void)
     sprintf(msg, "memory %dMB free: %dKB", mem_total >> 20, memman_total(man) >> 10);
     line_show8(shtback, LN_MEM, msg);
     sheet_refresh(shtback, 0, 0, binfo->scrnx, binfo->scrny);
+
+    tss_init(&tss_a);
+    set_segmdesc(gdt + 3, 103, (int) &tss_a, AR_TSS32);
+    tss_init(&tss_b);
+    set_segmdesc(gdt + 4, 103, (int) &tss_b, AR_TSS32);
 
     while (1)
     {

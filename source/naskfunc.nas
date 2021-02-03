@@ -10,10 +10,11 @@
         GLOBAL      _io_in8, _io_in16, _io_in32
         GLOBAL      _io_out8, _io_out16, _io_out32
         GLOBAL      _io_load_eflags, _io_store_eflags
-        GLOBAL	    _load_gdtr, _load_idtr
+        GLOBAL	    _load_gdtr, _load_idtr, _load_tr
         GLOBAL      _load_cr0, _store_cr0
         GLOBAL      _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
         GLOBAL      _memtest_sub
+		GLOBAL		_taskswitch4
         EXTERN      _inthandler20, _inthandler21, _inthandler27, _inthandler2c
 
 ; 以下是实际的函数
@@ -92,6 +93,10 @@ _load_idtr:             ; void load_idtr(int limit, int addr);
         MOV     [ESP + 6], AX
         LIDT    [ESP + 6]
         RET
+
+_load_tr:               ; void load_tr(int tr);
+        LTR     [ESP + 4]
+		RET
 
 _load_cr0:      ; int load_cr0(void);
         MOV     EAX, CR0
@@ -198,3 +203,7 @@ mts_fin:
         POP     ESI
         POP     EDI
         RET
+
+_taskswitch4:		; void taskswitch4(void);
+		JMP		4 * 8: 0
+		RET
