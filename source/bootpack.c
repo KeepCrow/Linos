@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "bootpack.h"
+#include "clock.h"
 #include "dsctbl.h"
 #include "fifo.h"
 #include "graphic.h"
@@ -14,10 +15,11 @@
 #include "timer.h"
 #include "task.h"
 
-#define FIFOVAL_5SECOND     5
-#define FIFOVAL_3SECOND     3
-#define FIFOVAL_SHINING0    0
-#define FIFOVAL_SHINING1    1
+#define FIFOVAL_BLINK0    0
+#define FIFOVAL_BLINK1    1
+#define FIFOVAL_SECOND    2
+#define FIFOVAL_TASK_SWAP 3
+#define FIFOVAL_COUNT_PUT 4
 
 // #define bootpack_debug
 extern struct TIMERCTL timerctl;
@@ -52,7 +54,7 @@ void HariMain(void)
     unsigned char msg[32], bufmouse[256];
     unsigned char *bufback, *bufwin;
     int mem_total, mx, my, cursori = 0;
-    int data;
+    int data, hour = 0, min = 0, sec = 0;
     int fifobuf[128];
     int task_b_esp;
     struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
@@ -60,10 +62,11 @@ void HariMain(void)
     struct MOUSE_DEC mdec;
     struct SHTCTL *shtctl;
     struct SHEET *shtback, *shtmouse, *shtwin;
-    struct TIMER *timer0, *timer1, *timer2;
+    struct TIMER *timer_sec, *timer_ts, *timer_blink;
     struct FIFO32 fifo;
     struct WINDOW win1;
     struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
+    struct CLOCK clock;
 
     init_gdtidt();  /* 初始化gdt与idt */
     init_pic(); /* 初始化pic */
@@ -72,15 +75,14 @@ void HariMain(void)
     fifo32_init(&fifo, fifobuf, 128);
 
     init_pit();
-    timer0 = timer_alloc();
-    timer_init(timer0, &fifo, FIFOVAL_5SECOND);
-    timer_settime(timer0, 500);
-    timer1 = timer_alloc();
-    timer_init(timer1, &fifo, FIFOVAL_3SECOND);
-    timer_settime(timer1, 300);
-    timer2 = timer_alloc();
-    timer_init(timer2, &fifo, FIFOVAL_SHINING1);
-    timer_settime(timer2, 50);
+    timer_sec = timer_alloc();
+    timer_init(timer_sec, &fifo, FIFOVAL_SECOND);
+    timer_settime(timer_sec, 100);
+    timer_blink = timer_alloc();
+    timer_init(timer_blink, &fifo, FIFOVAL_BLINK1);
+    timer_ts = timer_alloc();
+    timer_init(timer_ts, &fifo, FIFOVAL_TASK_SWAP);
+    timer_settime(timer_ts, 2);
 
     io_out8(PIC0_IMR, 0xf8);    /* 11111000 */
     io_out8(PIC1_IMR, 0xef);    /* 11101111 */
@@ -110,6 +112,7 @@ void HariMain(void)
     sheet_updown(shtback, 0);
 #endif
     shtwin = sheet_alloc(shtctl);
+    *((int *)0x0fec) = (int) shtback;
     sheet_setbuf(shtwin, bufwin, 160, 52, -1);
     sheet_slide(shtwin, 80, 72);
     sheet_updown(shtwin, 1);
@@ -126,10 +129,12 @@ void HariMain(void)
     sheet_refresh(shtback, 0, 0, binfo->scrnx, binfo->scrny);
 
     tss_init(&tss_a);
-    set_segmdesc(gdt + 3, 103, (int) &tss_a, AR_TSS32);
     tss_init(&tss_b);
+    set_segmdesc(gdt + 3, 103, (int) &tss_a, AR_TSS32);
     set_segmdesc(gdt + 4, 103, (int) &tss_b, AR_TSS32);
-    task_b_esp = memman_alloc4k(man, 64 * 1024) +64 * 1024;
+    load_tr(3 * 8); /* 将当前正在运行的任务定义为GDT的3号 */
+
+    task_b_esp = memman_alloc4k(man, 64 * 1024) + 64 * 1024;
     tss_b.eip = (int) &task_b_main;
     tss_b.eflags = 0x00000202;  /* IF = 1 */
     tss_b.eax = 0;
@@ -147,7 +152,9 @@ void HariMain(void)
     tss_b.fs = 1 * 8;
     tss_b.gs = 1 * 8;
 
-
+    clock_init(&clock);
+    sprintf(msg, "CLOCK: %02d:%02d:%02d", hour, min, sec);
+    line_show8(shtback, (enum LineNum)3, msg);
     while (1)
     {
         io_cli();
@@ -201,34 +208,75 @@ void HariMain(void)
                     sheet_slide(shtwin, mx - 80, my - 8);
             }
         }
-        else if (data == FIFOVAL_3SECOND)
+        else if (data == FIFOVAL_SECOND)
         {
-            line_show8(shtback, (enum LineNum)3, "3[sec]");
+            clock_next_second(&clock);
+            sprintf(msg, "CLOCK: %02d:%02d:%02d", clock.hour, clock.min, clock.sec);
+            line_show8(shtback, (enum LineNum)3, msg);
+            timer_settime(timer_sec, 100);
         }
-        else if (data == FIFOVAL_5SECOND)
-        {
-            line_show8(shtback, (enum LineNum)3, "5[sec]");
-            taskswitch4();
-        }
-        else if (data == FIFOVAL_SHINING0)
+        else if (data == FIFOVAL_BLINK0)
         {
             update_msg(shtwin, " ", cursori * FONT_WIDTH + 2, TITLE_HEIGHT + 3, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
-            timer_init(timer2, &fifo, FIFOVAL_SHINING1);
-            timer_settime(timer2, 50);
+            timer_init(timer_blink, &fifo, FIFOVAL_BLINK1);
+            timer_settime(timer_blink, 50);
         }
-        else if (data == FIFOVAL_SHINING1)
+        else if (data == FIFOVAL_BLINK1)
         {
             update_msg(shtwin, cursor, cursori * FONT_WIDTH + 2, TITLE_HEIGHT + 3, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
-            timer_init(timer2, &fifo, FIFOVAL_SHINING0);
-            timer_settime(timer2, 50);
+            timer_init(timer_blink, &fifo, FIFOVAL_BLINK0);
+            timer_settime(timer_blink, 50);
+        }
+        else if (data == FIFOVAL_TASK_SWAP)
+        {
+            farjmp(0, 4 * 8);
+            timer_settime(timer_ts, 2);
         }
     }
 }
 
 void task_b_main()
 {
+    struct FIFO32 fifo;
+    struct TIMER *timer_ts, *timer_put;
+    struct SHEET *shtback;
+    int data, fifobuf[128], count;
+    char msg[16];
+
+    shtback = (struct SHEET *)*((int *) 0x0fec);
+
+    fifo32_init(&fifo, fifobuf, 128);
+    timer_ts = timer_alloc();
+    timer_init(timer_ts, &fifo, FIFOVAL_TASK_SWAP);
+    timer_settime(timer_ts, 2);
+    timer_put = timer_alloc();
+    timer_init(timer_put, &fifo, FIFOVAL_COUNT_PUT);
+    timer_settime(timer_put, 1);
+
+    count = 0;
     while (1)
     {
-        io_hlt();
+        count += 1;        
+        io_cli();
+        if (fifo32_status(&fifo) == 0)
+        {
+            io_stihlt();
+        }
+        else
+        {
+            data = fifo32_get(&fifo);
+            io_sti();
+            if (data == FIFOVAL_TASK_SWAP)
+            {
+                farjmp(0, 3 * 8);
+                timer_settime(timer_ts, 2);
+            }
+            else if (data == FIFOVAL_COUNT_PUT)
+            {
+                sprintf(msg, "count: %d", count);
+                line_show8(shtback, (enum LineNum)4, msg);
+                timer_settime(timer_put, 1);
+            }
+        }
     }
 }

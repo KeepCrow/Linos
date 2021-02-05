@@ -14,7 +14,7 @@
         GLOBAL      _load_cr0, _store_cr0
         GLOBAL      _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
         GLOBAL      _memtest_sub
-		GLOBAL		_taskswitch4
+		GLOBAL		_farjmp
         EXTERN      _inthandler20, _inthandler21, _inthandler27, _inthandler2c
 
 ; 以下是实际的函数
@@ -204,6 +204,6 @@ mts_fin:
         POP     EDI
         RET
 
-_taskswitch4:		; void taskswitch4(void);
-		JMP		4 * 8: 0
-		RET
+_farjmp:            ; void farjmp(int eip, int cs);
+        JMP     FAR [ESP + 4]   ; eip, cs
+        RET

@@ -29,7 +29,6 @@ void init_keyboard(struct FIFO32 *fifo, int data0)
 /* 来自键盘PS/2的中断 */
 void inthandler21(int *esp)
 {
-    int data;
     io_out8(PIC0_OCW2, 0x61);
     fifo32_put(keyfifo, io_in8(PORT_KEYDAT) + FIFOVAL_KEY_BASE);
     return;

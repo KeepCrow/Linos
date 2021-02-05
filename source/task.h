@@ -13,6 +13,6 @@ struct TSS32
 };
 
 void tss_init(struct TSS32 *tss);
-void taskswitch4(void);
+void farjmp(int eip, int cs);
 
 #endif
