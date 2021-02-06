@@ -112,7 +112,6 @@ void HariMain(void)
     sheet_updown(shtback, 0);
 #endif
     shtwin = sheet_alloc(shtctl);
-    *((int *)0x0fec) = (int) shtback;
     sheet_setbuf(shtwin, bufwin, 160, 52, -1);
     sheet_slide(shtwin, 80, 72);
     sheet_updown(shtwin, 1);
@@ -134,7 +133,8 @@ void HariMain(void)
     set_segmdesc(gdt + 4, 103, (int) &tss_b, AR_TSS32);
     load_tr(3 * 8); /* 将当前正在运行的任务定义为GDT的3号 */
 
-    task_b_esp = memman_alloc4k(man, 64 * 1024) + 64 * 1024;
+    task_b_esp = memman_alloc4k(man, 64 * 1024) + 64 * 1024 - 8;
+    *((int *)(task_b_esp + 4)) = (int)shtback;
     tss_b.eip = (int) &task_b_main;
     tss_b.eflags = 0x00000202;  /* IF = 1 */
     tss_b.eax = 0;
@@ -235,15 +235,12 @@ void HariMain(void)
     }
 }
 
-void task_b_main()
+void task_b_main(struct SHEET *shtback)
 {
     struct FIFO32 fifo;
     struct TIMER *timer_ts, *timer_put;
-    struct SHEET *shtback;
     int data, fifobuf[128], count;
     char msg[16];
-
-    shtback = (struct SHEET *)*((int *) 0x0fec);
 
     fifo32_init(&fifo, fifobuf, 128);
     timer_ts = timer_alloc();
@@ -256,7 +253,7 @@ void task_b_main()
     count = 0;
     while (1)
     {
-        count += 1;        
+        count += 1;
         io_cli();
         if (fifo32_status(&fifo) == 0)
         {
