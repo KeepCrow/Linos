@@ -53,7 +53,7 @@ void HariMain(void)
     char cursor[2] = {0xdd, 0};
     unsigned char msg[32], bufmouse[256];
     unsigned char *bufback, *bufwin;
-    int mem_total, mx, my, cursori = 0;
+    int mem_total, mx, my, win_xsize, win_ysize;
     int data, hour = 0, min = 0, sec = 0;
     int fifobuf[128];
     int task_b_esp;
@@ -64,7 +64,7 @@ void HariMain(void)
     struct SHEET *shtback, *shtmouse, *shtwin;
     struct TIMER *timer_sec, *timer_ts, *timer_blink;
     struct FIFO32 fifo;
-    struct WINDOW win1;
+    struct INPUT_WIN win1, winback;
     struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
     struct CLOCK clock;
 
@@ -80,6 +80,7 @@ void HariMain(void)
     timer_settime(timer_sec, 100);
     timer_blink = timer_alloc();
     timer_init(timer_blink, &fifo, FIFOVAL_BLINK1);
+    timer_settime(timer_blink, 50);
     timer_ts = timer_alloc();
     timer_init(timer_ts, &fifo, FIFOVAL_TASK_SWAP);
     timer_settime(timer_ts, 2);
@@ -97,10 +98,15 @@ void HariMain(void)
     memman_free(man, 0x00400000, mem_total - 0x00400000);
 
     bufback = (unsigned char *)memman_alloc4k(man, binfo->scrnx * binfo->scrny);
-    bufwin  = (unsigned char *)memman_alloc4k(man, 160 * 52);
-    init_screen8(bufback, binfo->scrnx, binfo->scrny);
-    init_window8(&win1, bufwin, "window", 160, 52, DARK_BLUE, BRIGHT_GRAY);
-    make_window8(&win1);
+    staticwin_init(&winback, bufback, binfo->scrnx, binfo->scrny, "");
+    staticwin_make(&winback, BACK_COLOR, BACK_COLOR, BACK_COLOR, BACK_COLOR, WITHOUT_TITLE);
+    // init_screen8(bufback, binfo->scrnx, binfo->scrny);
+
+    win_xsize = WIN_XSIZE(binfo);
+    win_ysize = WIN_YSIZE(binfo);
+    bufwin  = (unsigned char *)memman_alloc4k(man, win_xsize * win_ysize);
+    inputwin_init(&win1, bufwin, win_xsize, win_ysize, "Console");
+    inputwin_make(&win1, LINE_COLOR, TITLE_BAR_COLOR, BODY_COLOR, FONT_COLOR);
 
     init_mouse_cursor8(bufmouse, INVI_COLOR);
 
@@ -112,8 +118,8 @@ void HariMain(void)
     sheet_updown(shtback, 0);
 #endif
     shtwin = sheet_alloc(shtctl);
-    sheet_setbuf(shtwin, bufwin, 160, 52, -1);
-    sheet_slide(shtwin, 80, 72);
+    sheet_setbuf(shtwin, bufwin, win_xsize, win_ysize, -1);
+    sheet_slide(shtwin, (binfo->scrnx - win_xsize) / 2, (binfo->scrny - win_ysize) / 2);
     sheet_updown(shtwin, 1);
     shtmouse = sheet_alloc(shtctl);
     sheet_setbuf(shtmouse, bufmouse, 16, 16, INVI_COLOR);
@@ -173,12 +179,16 @@ void HariMain(void)
             line_show8(shtback, LN_KEYBOARD, msg);
             if (data < FIFOVAL_KEY_BASE + 0x54)
             {
-                msg[0] = keytable[data - FIFOVAL_KEY_BASE];
-                msg[1] = 0;
-                update_msg(shtwin, msg, cursori * FONT_WIDTH + 2, TITLE_HEIGHT + 3, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
-                cursori += 1;
-                if (cursori >= shtwin->bxsize / FONT_WIDTH - 1)
-                    cursori = 0;
+                if (data - FIFOVAL_KEY_BASE == 0x0e)
+                {
+                    inputwin_del(&win1);
+                }
+                else
+                {
+                    msg[0] = keytable[data - FIFOVAL_KEY_BASE];
+                    msg[1] = 0;
+                    inputwin_input(&win1, shtwin, msg);
+                }
             }
         }
         else if ((data >= FIFOVAL_MOUSE_BASE) && (data <= FIFOVAL_MOUSE_MAX))   /* 鼠标数据 */
@@ -211,19 +221,19 @@ void HariMain(void)
         else if (data == FIFOVAL_SECOND)
         {
             clock_next_second(&clock);
-            sprintf(msg, "CLOCK: %02d:%02d:%02d", clock.hour, clock.min, clock.sec);
+            sprintf(msg, "time: %02d:%02d:%02d", clock.hour, clock.min, clock.sec);
             line_show8(shtback, (enum LineNum)3, msg);
             timer_settime(timer_sec, 100);
         }
         else if (data == FIFOVAL_BLINK0)
         {
-            update_msg(shtwin, " ", cursori * FONT_WIDTH + 2, TITLE_HEIGHT + 3, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
+            update_msg(shtwin, " ", win1.input_x, win1.input_y, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
             timer_init(timer_blink, &fifo, FIFOVAL_BLINK1);
             timer_settime(timer_blink, 50);
         }
         else if (data == FIFOVAL_BLINK1)
         {
-            update_msg(shtwin, cursor, cursori * FONT_WIDTH + 2, TITLE_HEIGHT + 3, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
+            update_msg(shtwin, cursor, win1.input_x, win1.input_y, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
             timer_init(timer_blink, &fifo, FIFOVAL_BLINK0);
             timer_settime(timer_blink, 50);
         }

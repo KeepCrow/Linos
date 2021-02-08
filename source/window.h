@@ -1,17 +1,52 @@
 #ifndef _WINDOW_H_
 #define _WINDOW_H_
 
-#define TITLE_HEIGHT 20
+/* 初始窗口大小: scrnx的5/9，scrny的2/3 */
+
+#include "graphic.h"
+#include "sheet.h"
+
+#define LINE_COLOR      DARK_GRAY
+#define BODY_COLOR      WHITE
+#define TITLE_BAR_COLOR BRIGHT_GRAY
+#define FONT_COLOR      BLACK
+
+#define TITLE_HEIGHT    24
+#define WIN_MARGIN_X    6
+#define WIN_MARGIN_Y    4
+#define WIN_INPUT_X0    (WIN_MARGIN_X * 2)
+#define WIN_INPUT_Y0    (WIN_MARGIN_Y * 2 + TITLE_HEIGHT)
+
+#define WIN_XSIZE(binfo)    (binfo->scrnx * 5 / 6)
+#define WIN_YSIZE(binfo)    (binfo->scrny * 2 / 3)
+
+#define WITHOUT_TITLE   0
+#define WITH_TITLE      1
 
 struct WINDOW
 {
-    unsigned char title_color, body_color;
-    char *title;
-    unsigned char *buf;
+    unsigned char *title, *buf;
     int xsize, ysize;
+    struct SHEET *sht;
 };
 
-void init_window8(struct WINDOW *win, unsigned char *buf, char *title, int xsize, int ysize, unsigned char tc, unsigned bc);
-void make_window8(struct WINDOW *win);
+struct INPUT_WIN
+{
+    struct WINDOW base;
+    int input_x, input_y;
+};
+
+struct STATIC_WIN
+{
+    struct WINDOW base;
+};
+
+void inputwin_init(struct INPUT_WIN *win, unsigned char *buf, int xsize, int ysize, char *title);
+void inputwin_make(struct INPUT_WIN *win, char line_clr, char title_clr, char body_clr, char font_clr);
+void inputwin_input(struct INPUT_WIN *win, struct SHEET *sht, unsigned char *str);
+void inputwin_del(struct INPUT_WIN *win);
+
+void staticwin_init(struct STATIC_WIN *win, unsigned char *buf, int xsize, int ysize, char *title);
+void staticwin_make(struct STATIC_WIN *win, char line_clr, char title_clr, char body_clr, char font_clr, char with_title);
 
 #endif

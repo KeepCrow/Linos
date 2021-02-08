@@ -4,6 +4,8 @@
 
 #define TASK_HEIGHT     20
 
+extern char hankaku[4096];
+
 void set_palette(int start, int end, unsigned char *rgb)
 {
     int i, eflags;
@@ -33,10 +35,11 @@ void init_palette(void)
         0x00, 0xff, 0x00,   /* 2:亮绿 */
         0xff, 0xff, 0x00,   /* 3:亮黄 */
         0x00, 0x00, 0xff,   /* 4:亮蓝 */
-        0xff, 0x00, 0xff,   /* 5:亮紫 */
+        0x55, 0x57, 0x61,   /* 5:深邃灰 */
         0x00, 0xff, 0xff,   /* 6:浅亮蓝 */
         0xff, 0xff, 0xff,   /* 7:白 */
-        0xc6, 0xc6, 0xc6,   /* 8:亮灰 */
+        // 0xc6, 0xc6, 0xc6,   /* 8:亮灰 */
+        0xe3, 0xe3, 0xe3,   /* 8:亮灰 */
         0x84, 0x00, 0x00,   /* 9:暗红 */
         0x00, 0x84, 0x00,   /* 10:暗绿 */
         0x84, 0x84, 0x00,   /* 11:暗黄 */
@@ -113,7 +116,6 @@ void putfont8(char *buf, int xsize, int x, int y, char c, char *font)
  */
 void putfonts8_asc(char *buf, int xsize, int x, int y, char c, unsigned char *s)
 {
-    extern char hankaku[4096];
     for (; *s != 0x00; s++)
     {
         putfont8(buf, xsize, x, y, c, hankaku + *s * 16);
@@ -235,9 +237,6 @@ void line_input8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
  */
 void init_screen8(char *buf, int xsize, int ysize)
 {
-    boxfill8(buf, xsize, 0, 0, xsize, ysize - TASK_HEIGHT, BACK_COLOR, BACK_COLOR);
-    boxfill8(buf, xsize, 0, ysize - TASK_HEIGHT, xsize, TASK_HEIGHT, BRIGHT_GRAY, BRIGHT_GRAY);
-    boxfill8(buf, xsize, 0, ysize - TASK_HEIGHT, xsize, 1, WHITE, WHITE);
-    boxfill8(buf, xsize, 0, ysize - TASK_HEIGHT, 57, TASK_HEIGHT, WHITE, BRIGHT_GRAY);
+    boxfill8(buf, xsize, 0, 0, xsize, ysize, BACK_COLOR, BACK_COLOR);
     return;
 }
