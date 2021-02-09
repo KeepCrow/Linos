@@ -76,22 +76,22 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
 void init_mouse_cursor8(char *mouse, char bc)
 {
     static char cursor[16][16] = {
-        "**************..",
-        "*OOOOOOOOOOO*...",
-        "*OOOOOOOOOO*....",
-        "*OOOOOOOOO*.....",
-        "*OOOOOOOO*......",
-        "*OOOOOOO*.......",
-        "*OOOOOOO*.......",
-        "*OOOOOOOO*......",
-        "*OOOO**OOO*.....",
-        "*OOO*..*OOO*....",
-        "*OO*....*OOO*...",
-        "*O*......*OOO*..",
-        "**........*OOO*.",
-        "*..........*OOO*",
-        "............*OO*",
-        ".............***"
+        "................",
+        ".*******........",
+        ".**OOOO*****....",
+        ".**OOOOOOOO***..",
+        ".**OOOOOOOOO**..",
+        ".**OOOOOOOOOO*..",
+        "..**OOOOOOO***..",
+        "..**OOOOOO***...",
+        "..**OOOOOO**....",
+        "..**OOO*OOO**...",
+        "...**OO**OOO**..",
+        "...**O****OOO**.",
+        "...*****.**OO**.",
+        "....***...*****.",
+        "...........***..",
+        "................"
     };
     int x, y;
 

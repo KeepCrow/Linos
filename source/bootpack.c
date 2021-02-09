@@ -54,7 +54,7 @@ void HariMain(void)
     unsigned char msg[32], bufmouse[256];
     unsigned char *bufback, *bufwin;
     int mem_total, mx, my, win_xsize, win_ysize;
-    int data, hour = 0, min = 0, sec = 0;
+    int data;
     int fifobuf[128];
     int task_b_esp;
     struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
@@ -64,7 +64,8 @@ void HariMain(void)
     struct SHEET *shtback, *shtmouse, *shtwin;
     struct TIMER *timer_sec, *timer_ts, *timer_blink;
     struct FIFO32 fifo;
-    struct INPUT_WIN win1, winback;
+    struct INPUT_WIN win1;
+    struct STATIC_WIN winback;
     struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
     struct CLOCK clock;
 
@@ -99,14 +100,13 @@ void HariMain(void)
 
     bufback = (unsigned char *)memman_alloc4k(man, binfo->scrnx * binfo->scrny);
     staticwin_init(&winback, bufback, binfo->scrnx, binfo->scrny, "");
-    staticwin_make(&winback, BACK_COLOR, BACK_COLOR, BACK_COLOR, BACK_COLOR, WITHOUT_TITLE);
-    // init_screen8(bufback, binfo->scrnx, binfo->scrny);
+    init_screen8(bufback, binfo->scrnx, binfo->scrny);
 
     win_xsize = WIN_XSIZE(binfo);
     win_ysize = WIN_YSIZE(binfo);
     bufwin  = (unsigned char *)memman_alloc4k(man, win_xsize * win_ysize);
     inputwin_init(&win1, bufwin, win_xsize, win_ysize, "Console");
-    inputwin_make(&win1, LINE_COLOR, TITLE_BAR_COLOR, BODY_COLOR, FONT_COLOR);
+    inputwin_make(&win1, LINE_COLOR, TITLE_BAR_COLOR, BODY_COLOR, TITLE_FONT_COLOR);
 
     init_mouse_cursor8(bufmouse, INVI_COLOR);
 
@@ -159,8 +159,7 @@ void HariMain(void)
     tss_b.gs = 1 * 8;
 
     clock_init(&clock);
-    sprintf(msg, "CLOCK: %02d:%02d:%02d", hour, min, sec);
-    line_show8(shtback, (enum LineNum)3, msg);
+    show_clock(&clock, shtback);
     while (1)
     {
         io_cli();
@@ -176,7 +175,7 @@ void HariMain(void)
         if (data >= FIFOVAL_KEY_BASE && data <= FIFOVAL_KEY_MAX) /* 键盘数据 */
         {
             sprintf(msg, "keyboard input: %02X", data - FIFOVAL_KEY_BASE);
-            line_show8(shtback, LN_KEYBOARD, msg);
+            line_show8(shtback, LN_KEYBOARD + 2, msg);
             if (data < FIFOVAL_KEY_BASE + 0x54)
             {
                 if (data - FIFOVAL_KEY_BASE == 0x0e)
@@ -210,7 +209,7 @@ void HariMain(void)
                     msg[17] = 'R';
                 else if ((mdec.btn & 0x04) != 0)
                     msg[16] = 'C';
-                line_show8(shtback, LN_MOUSE, msg);
+                line_show8(shtback, LN_MOUSE + 2, msg);
                 sheet_slide(shtmouse, mx, my);
 
                 /* 移动窗口 */
@@ -221,19 +220,18 @@ void HariMain(void)
         else if (data == FIFOVAL_SECOND)
         {
             clock_next_second(&clock);
-            sprintf(msg, "time: %02d:%02d:%02d", clock.hour, clock.min, clock.sec);
-            line_show8(shtback, (enum LineNum)3, msg);
+            show_clock(&clock, shtback);
             timer_settime(timer_sec, 100);
         }
         else if (data == FIFOVAL_BLINK0)
         {
-            update_msg(shtwin, " ", win1.input_x, win1.input_y, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
+            update_msg(shtwin, " ", win1.input_x, win1.input_y, FONT_WIDTH, FONT_HEIGHT, BODY_COLOR, FONT_COLOR);
             timer_init(timer_blink, &fifo, FIFOVAL_BLINK1);
             timer_settime(timer_blink, 50);
         }
         else if (data == FIFOVAL_BLINK1)
         {
-            update_msg(shtwin, cursor, win1.input_x, win1.input_y, FONT_WIDTH, FONT_HEIGHT, WHITE, BLACK);
+            update_msg(shtwin, cursor, win1.input_x, win1.input_y, FONT_WIDTH, FONT_HEIGHT, BODY_COLOR, FONT_COLOR);
             timer_init(timer_blink, &fifo, FIFOVAL_BLINK0);
             timer_settime(timer_blink, 50);
         }

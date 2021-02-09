@@ -6,16 +6,17 @@
 #include "graphic.h"
 #include "sheet.h"
 
-#define LINE_COLOR      DARK_GRAY
-#define BODY_COLOR      WHITE
-#define TITLE_BAR_COLOR BRIGHT_GRAY
-#define FONT_COLOR      BLACK
+#define LINE_COLOR          DIM_GRAY
+#define BODY_COLOR          DARK_WHITE
+#define TITLE_BAR_COLOR     DARK_BROWN
+#define TITLE_FONT_COLOR    DARK_WHITE
+#define FONT_COLOR          DARK_BROWN
 
-#define TITLE_HEIGHT    24
+#define TITLE_HEIGHT    32
 #define WIN_MARGIN_X    6
 #define WIN_MARGIN_Y    4
 #define WIN_INPUT_X0    (WIN_MARGIN_X * 2)
-#define WIN_INPUT_Y0    (WIN_MARGIN_Y * 2 + TITLE_HEIGHT)
+#define WIN_INPUT_Y0    (WIN_MARGIN_Y + TITLE_HEIGHT)
 
 #define WIN_XSIZE(binfo)    (binfo->scrnx * 5 / 6)
 #define WIN_YSIZE(binfo)    (binfo->scrny * 2 / 3)

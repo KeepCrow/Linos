@@ -16,11 +16,11 @@
 #define DARK_RED        9   /* 840000 */
 #define DARK_GREEN      10  /* 008400 */
 #define DARK_YELLOW     11  /* 848400 */
-#define DARK_BLUE       12  /* 000084 */
-#define DARK_PURPLE     13  /* 840084 */
-#define LIGHT_DARK_BLUE 14  /* 008484 */
-#define DARK_GRAY       15  /* 848484 */
-#define BACK_COLOR      DIM_GRAY
+#define DARK_BROWN      12  /* 000084 */
+#define JEANS_BLUE      13  /* 840084 */
+#define DARK_WHITE      14  /* 008484 */
+#define CEMENT_GRAY     15  /* 848484 */
+#define BACK_COLOR      JEANS_BLUE
 #define INVI_COLOR      99
 
 #define LINE_SPAN       20  /* 行高 */

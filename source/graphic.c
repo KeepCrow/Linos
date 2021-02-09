@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "naskfunc.h"
 #include "graphic.h"
+#include "window.h"
+#include "clock.h"
 
 #define TASK_HEIGHT     20
 
@@ -30,23 +32,23 @@ void init_palette(void)
 {
     static unsigned char table_rgb[16 * 3] = 
     {
-        0x00, 0x00, 0x00,   /* 0: 黑 */
+        0x1e, 0x1e, 0x1e,   /* 0: 黑 */
         0xff, 0x00, 0x00,   /* 1:亮红 */
         0x00, 0xff, 0x00,   /* 2:亮绿 */
         0xff, 0xff, 0x00,   /* 3:亮黄 */
         0x00, 0x00, 0xff,   /* 4:亮蓝 */
-        0x55, 0x57, 0x61,   /* 5:深邃灰 */
+        0x33, 0x33, 0x33,   /* 5:深邃灰 */
         0x00, 0xff, 0xff,   /* 6:浅亮蓝 */
         0xff, 0xff, 0xff,   /* 7:白 */
         // 0xc6, 0xc6, 0xc6,   /* 8:亮灰 */
         0xe3, 0xe3, 0xe3,   /* 8:亮灰 */
         0x84, 0x00, 0x00,   /* 9:暗红 */
         0x00, 0x84, 0x00,   /* 10:暗绿 */
-        0x84, 0x84, 0x00,   /* 11:暗黄 */
-        0x00, 0x00, 0x84,   /* 12:暗青 */
-        0x84, 0x00, 0x84,   /* 13:暗紫 */
-        0x00, 0x84, 0x84,   /* 14:浅暗蓝 */
-        0x84, 0x84, 0x84    /* 15:暗灰 */
+        0x73, 0x73, 0x73,   /* 11:暗黄 */
+        0x3d, 0x3d, 0x3d,   /* 12:棕黑色 */
+        0x4b, 0x59, 0x70,   /* 13:牛仔蓝 */
+        0xeb, 0xed, 0xec,   /* 14:暗白色 */
+        0xa2, 0xa9, 0xaf    /* 15:水泥灰 */
     };
     set_palette(0, 15, table_rgb);
     return;
@@ -238,5 +240,7 @@ void line_input8(struct SHEET *sht, enum LineNum line_num, unsigned char *msg)
 void init_screen8(char *buf, int xsize, int ysize)
 {
     boxfill8(buf, xsize, 0, 0, xsize, ysize, BACK_COLOR, BACK_COLOR);
+    boxfill8(buf, xsize, CLOCK_X0(xsize) - 3, CLOCK_Y0(ysize) - 3, CLOCK_XLEN + 6, CLOCK_YLEN + 6, DIM_GRAY, DARK_WHITE);
+    boxfill8(buf, xsize, CLOCK_X0(xsize) - 2, CLOCK_Y0(ysize) - 2, CLOCK_XLEN + 4, CLOCK_YLEN + 4, DIM_GRAY, DARK_WHITE);
     return;
 }

@@ -1,23 +1,23 @@
 OBJS_BOOTPACK = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj \
-				int.obj fifo.obj mouse.obj keyboard.obj memory.obj sheet.obj \
-				window.obj timer.obj task.obj
+                int.obj fifo.obj mouse.obj keyboard.obj memory.obj sheet.obj \
+                window.obj timer.obj task.obj clock.obj
 
-TOOL 	= ../tolset/z_tools
-INC 	= $(TOOL)/linos
+TOOL    = ../tolset/z_tools
+INC     = $(TOOL)/linos
 
-MAKE 		= $(TOOL)/make.exe -r
-NASK 		= $(TOOL)/nask.exe
-CC1 		= $(TOOL)/cc1.exe -I$(INC) -Os -Wall -quiet
-GAS2NASK	= $(TOOL)/gas2nask.exe -a
-OBJ2BIM		= $(TOOL)/obj2bim.exe
-MAKEFONT	= $(TOOL)/makefont.exe
-BIN2OBJ		= $(TOOL)/bin2obj.exe
-BIM2HRB		= $(TOOL)/bim2hrb.exe
-RULEFILE	= $(TOOL)/linos/linos.rul
-EDIMG 		= $(TOOL)/edimg.exe
-IMGTOL		= $(TOOL)/imgtol.com
-COPY 	= copy
-DEL		= del
+MAKE        = $(TOOL)/make.exe -r
+NASK        = $(TOOL)/nask.exe
+CC1         = $(TOOL)/cc1.exe -I$(INC) -Os -Wall -quiet
+GAS2NASK    = $(TOOL)/gas2nask.exe -a
+OBJ2BIM     = $(TOOL)/obj2bim.exe
+MAKEFONT    = $(TOOL)/makefont.exe
+BIN2OBJ     = $(TOOL)/bin2obj.exe
+BIM2HRB     = $(TOOL)/bim2hrb.exe
+RULEFILE    = $(TOOL)/linos/linos.rul
+EDIMG       = $(TOOL)/edimg.exe
+IMGTOL      = $(TOOL)/imgtol.com
+COPY        = copy
+DEL         = del
 
 default :
 	$(MAKE) run

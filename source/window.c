@@ -16,7 +16,7 @@ static inline void win_make_title(struct WINDOW *win, char title_clr, char font_
     char c;
     int x, y;
     int close_x   = win->xsize - WIN_MARGIN_X - 16; /* closebtn 水平方向是16个像素 */
-    int close_y   = (TITLE_HEIGHT + WIN_MARGIN_Y - FONT_HEIGHT) / 2;
+    int close_y   = (TITLE_HEIGHT - FONT_HEIGHT) / 2;
 
     static char closebtn[16][16] = {
         "QQQQQQQQQQQQQQQQ",
@@ -61,11 +61,11 @@ void inputwin_make(struct INPUT_WIN *win, char line_clr, char title_clr, char bo
     int xsize     = win->base.xsize;
     int ysize     = win->base.ysize;
     int title_x0  = WIN_MARGIN_X * 2;
-    int title_y0  = (TITLE_HEIGHT + WIN_MARGIN_Y - FONT_HEIGHT) / 2;
-    int body_x0   = WIN_MARGIN_X;
-    int body_y0   = TITLE_HEIGHT + WIN_MARGIN_Y;
-    int body_xlen = xsize - 2 * WIN_MARGIN_X;
-    int body_ylen = ysize - 2 * WIN_MARGIN_Y - TITLE_HEIGHT;
+    int title_y0  = (TITLE_HEIGHT - FONT_HEIGHT) / 2;
+    int body_x0   = 0;
+    int body_y0   = TITLE_HEIGHT;
+    int body_xlen = xsize;
+    int body_ylen = ysize - TITLE_HEIGHT;
 
     boxfill8(buf, xsize, 0, 0, xsize, ysize, line_clr, title_clr);
     boxfill8(buf, xsize, body_x0, body_y0, body_xlen, body_ylen, line_clr, body_clr);
@@ -120,11 +120,11 @@ void staticwin_make(struct STATIC_WIN *win, char line_clr, char title_clr, char 
     int xsize     = win->base.xsize;
     int ysize     = win->base.ysize;
     int title_x0  = WIN_MARGIN_X * 2;
-    int title_y0  = (TITLE_HEIGHT + WIN_MARGIN_Y - FONT_HEIGHT) / 2;
-    int body_x0   = WIN_MARGIN_X;
-    int body_y0   = TITLE_HEIGHT + WIN_MARGIN_Y;
-    int body_xlen = xsize - 2 * WIN_MARGIN_X;
-    int body_ylen = ysize - 2 * WIN_MARGIN_Y - TITLE_HEIGHT;
+    int title_y0  = (TITLE_HEIGHT - FONT_HEIGHT) / 2;
+    int body_x0   = 0;
+    int body_y0   = TITLE_HEIGHT;
+    int body_xlen = xsize;
+    int body_ylen = ysize - TITLE_HEIGHT;
 
     if (with_title == WITH_TITLE)
     {
